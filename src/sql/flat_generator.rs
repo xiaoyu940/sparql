@@ -1869,7 +1869,7 @@ fn add_join_condition(
                         format!("{}.col_{}", from_table.alias, var_name),
                         format!("{}.col_{}", from_table.alias, to_snake_case(var_name)),
                     ];
-                    for c in candidates {
+                    if let Some(c) = candidates.into_iter().next() {
                         return Ok(c);
                     }
                 }

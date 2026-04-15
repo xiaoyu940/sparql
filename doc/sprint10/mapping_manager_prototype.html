@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RS Ontop 本体与映射管理原型</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f4ef;
+      --card: #fffdf8;
+      --ink: #1f2a30;
+      --muted: #6f7c82;
+      --line: #d9d4c7;
+      --brand: #066f72;
+      --accent: #cb5b25;
+      --ok: #1f7a4d;
+      --warn: #9d5d00;
+      --danger: #b72424;
+      --shadow: 0 12px 30px rgba(26, 35, 44, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 10%, rgba(6,111,114,0.08) 0%, transparent 35%),
+        radial-gradient(circle at 92% 0%, rgba(203,91,37,0.08) 0%, transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .app {
+      width: min(1420px, 95vw);
+      margin: 20px auto;
+      display: grid;
+      grid-template-columns: 340px 1fr 420px;
+      gap: 14px;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(90deg, rgba(6,111,114,0.07), rgba(203,91,37,0.05));
+    }
+    .panel-title { margin: 0; font-size: 15px; font-weight: 700; }
+    .panel-body { padding: 14px 16px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .btn.accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.danger { background: #fff2f2; color: var(--danger); border-color: #f0cccc; }
+
+    .search {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .ontology-list {
+      max-height: calc(100vh - 220px);
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+      padding-right: 2px;
+    }
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      cursor: pointer;
+      background: #fff;
+    }
+    .item.active { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); background: #f2fbfb; }
+    .item h4 { margin: 0 0 4px 0; font-size: 13px; }
+    .item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tag {
+      display: inline-flex;
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      margin-bottom: 6px;
+      border: 1px solid;
+    }
+    .tag.class { color: #0b5560; background: #e7f6f7; border-color: #afd6da; }
+    .tag.property { color: #7a3b13; background: #fff0e7; border-color: #e8b899; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field.full { grid-column: 1 / -1; }
+    .label {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    input, textarea, select {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .mono { font-family: "IBM Plex Mono", monospace; }
+
+    .sep {
+      height: 1px;
+      background: var(--line);
+      margin: 12px 0;
+    }
+
+    .mapping-list {
+      display: grid;
+      gap: 8px;
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .status {
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: #eef5f5;
+      color: #355254;
+      min-height: 34px;
+    }
+    .status.ok { background: #ebf8ef; color: var(--ok); }
+    .status.warn { background: #fff7ea; color: var(--warn); }
+    .status.danger { background: #fff0f0; color: var(--danger); }
+
+    .preview {
+      width: 100%;
+      min-height: 220px;
+      max-height: 440px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #1f2529;
+      color: #d6e5dd;
+      padding: 12px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 1180px) { .app { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">本体对象列表</h2>
+        <div class="toolbar">
+          <button class="btn primary" id="newClassBtn">+ 类</button>
+          <button class="btn accent" id="newPropertyBtn">+ 属性</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <input id="searchInput" class="search" placeholder="按 IRI / 标签 / 类型过滤...">
+        <div class="ontology-list" id="ontologyList"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">详细维护</h2>
+        <div class="toolbar">
+          <button class="btn" id="cloneBtn">复制</button>
+          <button class="btn danger" id="deleteBtn">删除</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <label class="field full">
+            <span class="label">IRI</span>
+            <input id="iriInput" class="mono" placeholder="http://example.org/Employee">
+          </label>
+          <label class="field">
+            <span class="label">对象类型</span>
+            <select id="typeInput">
+              <option value="class">Class</option>
+              <option value="property">Property</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">属性类型</span>
+            <select id="propTypeInput">
+              <option value="datatype">DatatypeProperty</option>
+              <option value="object">ObjectProperty</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="label">标签</span>
+            <input id="labelInput" placeholder="Employee">
+          </label>
+          <label class="field">
+            <span class="label">父级（逗号分隔）</span>
+            <input id="parentsInput" class="mono" placeholder="http://example.org/Person">
+          </label>
+          <label class="field" id="domainField">
+            <span class="label">Domain</span>
+            <input id="domainInput" class="mono" placeholder="http://example.org/Employee">
+          </label>
+          <label class="field" id="rangeField">
+            <span class="label">Range</span>
+            <input id="rangeInput" class="mono" placeholder="http://www.w3.org/2001/XMLSchema#string">
+          </label>
+          <label class="field full">
+            <span class="label">注释</span>
+            <textarea id="commentInput" placeholder="对象说明"></textarea>
+          </label>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="toolbar" style="justify-content:space-between; margin-bottom:8px;">
+          <span class="label" style="padding-top:8px;">关联映射规则</span>
+          <button class="btn" id="newMappingBtn">+ 新建映射</button>
+        </div>
+        <div class="mapping-list" id="relatedMappings"></div>
+
+        <div class="sep"></div>
+        <div class="toolbar">
+          <button class="btn primary" id="saveBtn">保存草稿</button>
+          <button class="btn" id="validateBtn">校验当前对象</button>
+          <button class="btn accent" id="exportJsonBtn">导出本体 JSON</button>
+        </div>
+        <div id="status" class="status" style="margin-top:10px;">就绪。</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 class="panel-title">导出预览</h2>
+      </div>
+      <div class="panel-body">
+        <div class="toolbar" style="margin-bottom:10px;">
+          <button class="btn" id="exportTtlBtn">生成 TTL 片段</button>
+          <button class="btn accent" id="exportSqlBtn">生成 SQL 脚本</button>
+        </div>
+        <div class="preview" id="previewBox"># 从左侧本体对象列表进入详细维护后可导出</div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const KEY = "rs_ontop_ontology_manager_prototype_v1";
+    const seed = {
+      ontology: [
+        {
+          id: crypto.randomUUID(),
+          iri: "http://example.org/Employee",
+          type: "class",
+          property_type: "datatype",
+          label: "Employee",
+          parents: ["http://example.org/Person"],
+          domain: "",
+          range: "",
+          comment: "员工类"
+        },
+        {
+          id: crypto.randomUUID(),
+          iri: "http://example.org/employee#firstName",
+          type: "property",
+          property_type: "datatype",
+          label: "firstName",
+          parents: [],
+          domain: "http://example.org/Employee",
+          range: "http://www.w3.org/2001/XMLSchema#string",
+          comment: "员工姓名属性"
+        }
+      ],
+      mappings: [
+        {
+          id: crypto.randomUUID(),
+          ontology_iri: "http://example.org/employee#firstName",
+          name: "employee_firstname_map",
+          predicate: "http://example.org/employee#firstName",
+          table_name: "employees",
+          subject_template: "http://example.org/employee/{id}",
+          position_to_column: { "1": "first_name" }
+        }
+      ]
+    };
+
+    const state = { ontology: [], mappings: [], selectedId: null };
+
+    const els = {
+      ontologyList: document.getElementById("ontologyList"),
+      relatedMappings: document.getElementById("relatedMappings"),
+      searchInput: document.getElementById("searchInput"),
+      previewBox: document.getElementById("previewBox"),
+      status: document.getElementById("status"),
+      iriInput: document.getElementById("iriInput"),
+      typeInput: document.getElementById("typeInput"),
+      propTypeInput: document.getElementById("propTypeInput"),
+      labelInput: document.getElementById("labelInput"),
+      parentsInput: document.getElementById("parentsInput"),
+      domainInput: document.getElementById("domainInput"),
+      rangeInput: document.getElementById("rangeInput"),
+      commentInput: document.getElementById("commentInput"),
+      domainField: document.getElementById("domainField"),
+      rangeField: document.getElementById("rangeField")
+    };
+
+    function setStatus(msg, cls = "") {
+      els.status.className = "status" + (cls ? " " + cls : "");
+      els.status.textContent = msg;
+    }
+
+    function loadState() {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) {
+        state.ontology = seed.ontology;
+        state.mappings = seed.mappings;
+        state.selectedId = state.ontology[0].id;
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        state.ontology = Array.isArray(parsed.ontology) ? parsed.ontology : seed.ontology;
+        state.mappings = Array.isArray(parsed.mappings) ? parsed.mappings : seed.mappings;
+        state.selectedId = parsed.selectedId || state.ontology[0]?.id || null;
+      } catch {
+        state.ontology = seed.ontology;
+        state.mappings = seed.mappings;
+        state.selectedId = state.ontology[0].id;
+      }
+    }
+
+    function persist() {
+      localStorage.setItem(KEY, JSON.stringify({
+        ontology: state.ontology,
+        mappings: state.mappings,
+        selectedId: state.selectedId
+      }));
+    }
+
+    function selected() {
+      return state.ontology.find(x => x.id === state.selectedId) || null;
+    }
+
+    function renderList() {
+      const q = els.searchInput.value.trim().toLowerCase();
+      const items = state.ontology.filter(x => {
+        const s = `${x.iri} ${x.label} ${x.type}`.toLowerCase();
+        return s.includes(q);
+      });
+      els.ontologyList.innerHTML = "";
+      if (!items.length) {
+        els.ontologyList.innerHTML = "<div class='item'>没有匹配本体对象</div>";
+        return;
+      }
+      for (const o of items) {
+        const div = document.createElement("div");
+        div.className = "item" + (o.id === state.selectedId ? " active" : "");
+        div.innerHTML = `
+          <span class="tag ${o.type}">${o.type === "class" ? "Class" : "Property"}</span>
+          <h4>${escapeHtml(o.label || iriTail(o.iri))}</h4>
+          <p>${escapeHtml(o.iri)}</p>`;
+        div.onclick = () => {
+          state.selectedId = o.id;
+          renderAll();
+        };
+        els.ontologyList.appendChild(div);
+      }
+    }
+
+    function renderDetail() {
+      const o = selected();
+      if (!o) return;
+      els.iriInput.value = o.iri || "";
+      els.typeInput.value = o.type || "class";
+      els.propTypeInput.value = o.property_type || "datatype";
+      els.labelInput.value = o.label || "";
+      els.parentsInput.value = (o.parents || []).join(", ");
+      els.domainInput.value = o.domain || "";
+      els.rangeInput.value = o.range || "";
+      els.commentInput.value = o.comment || "";
+      togglePropertyFields();
+      renderRelatedMappings();
+    }
+
+    function togglePropertyFields() {
+      const isProperty = els.typeInput.value === "property";
+      els.domainField.style.display = isProperty ? "flex" : "none";
+      els.rangeField.style.display = isProperty ? "flex" : "none";
+    }
+
+    function renderRelatedMappings() {
+      const o = selected();
+      if (!o) return;
+      const rows = state.mappings.filter(m => m.ontology_iri === o.iri || m.predicate === o.iri);
+      els.relatedMappings.innerHTML = "";
+      if (!rows.length) {
+        els.relatedMappings.innerHTML = "<div class='item'>暂无关联映射</div>";
+        return;
+      }
+      for (const m of rows) {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `<h4>${escapeHtml(m.name)}</h4><p>${escapeHtml(m.table_name)} :: ${escapeHtml(JSON.stringify(m.position_to_column))}</p>`;
+        els.relatedMappings.appendChild(div);
+      }
+    }
+
+    function captureForm() {
+      const o = selected();
+      if (!o) return;
+      o.iri = els.iriInput.value.trim();
+      o.type = els.typeInput.value;
+      o.property_type = els.propTypeInput.value;
+      o.label = els.labelInput.value.trim();
+      o.parents = els.parentsInput.value.split(",").map(x => x.trim()).filter(Boolean);
+      o.domain = els.domainInput.value.trim();
+      o.range = els.rangeInput.value.trim();
+      o.comment = els.commentInput.value.trim();
+      persist();
+    }
+
+    function addOntology(type) {
+      const obj = {
+        id: crypto.randomUUID(),
+        iri: type === "class" ? "http://example.org/NewClass" : "http://example.org/newProperty",
+        type,
+        property_type: "datatype",
+        label: type === "class" ? "NewClass" : "newProperty",
+        parents: [],
+        domain: "",
+        range: "",
+        comment: ""
+      };
+      state.ontology.unshift(obj);
+      state.selectedId = obj.id;
+      persist();
+      renderAll();
+      setStatus(`已创建${type === "class" ? "类" : "属性"}对象。`, "ok");
+    }
+
+    function cloneOntology() {
+      const o = selected();
+      if (!o) return;
+      const cp = JSON.parse(JSON.stringify(o));
+      cp.id = crypto.randomUUID();
+      cp.label = `${o.label || iriTail(o.iri)}_copy`;
+      state.ontology.unshift(cp);
+      state.selectedId = cp.id;
+      persist();
+      renderAll();
+      setStatus("已复制本体对象。", "ok");
+    }
+
+    function deleteOntology() {
+      const o = selected();
+      if (!o) return;
+      if (!confirm(`确认删除对象 ${o.iri} ?`)) return;
+      state.ontology = state.ontology.filter(x => x.id !== o.id);
+      state.selectedId = state.ontology[0]?.id || null;
+      persist();
+      renderAll();
+      setStatus("对象已删除。", "warn");
+    }
+
+    function addMappingForSelected() {
+      const o = selected();
+      if (!o) return;
+      const map = {
+        id: crypto.randomUUID(),
+        ontology_iri: o.iri,
+        name: `${iriTail(o.iri)}_mapping`,
+        predicate: o.type === "property" ? o.iri : "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+        table_name: "",
+        subject_template: "",
+        position_to_column: o.type === "property" ? { "1": "" } : {}
+      };
+      state.mappings.unshift(map);
+      persist();
+      renderRelatedMappings();
+      setStatus("已创建关联映射草稿（请后续完善）。", "ok");
+    }
+
+    function validateSelected() {
+      captureForm();
+      const o = selected();
+      if (!o) return;
+      if (!o.iri) return setStatus("校验失败：IRI 不能为空。", "danger");
+      if (!o.label) return setStatus("校验失败：标签不能为空。", "danger");
+      if (o.type === "property" && (!o.domain || !o.range)) {
+        return setStatus("校验失败：Property 必须填写 domain 和 range。", "danger");
+      }
+      if (!/^https?:\/\/.+/.test(o.iri)) {
+        return setStatus("校验警告：IRI 不是标准 http(s) 格式。", "warn");
+      }
+      setStatus("校验通过。", "ok");
+    }
+
+    function exportOntologyJson() {
+      captureForm();
+      const payload = {
+        exported_at: new Date().toISOString(),
+        ontology: state.ontology,
+        mappings: state.mappings
+      };
+      const json = JSON.stringify(payload, null, 2);
+      els.previewBox.textContent = json;
+      downloadBlob("ontology_mapping_prototype.json", "application/json", json);
+      setStatus("已导出本体 JSON。", "ok");
+    }
+
+    function exportTtl() {
+      captureForm();
+      const o = selected();
+      if (!o) return;
+      let out = "";
+      if (o.type === "class") {
+        out += `<${o.iri}> a <http://www.w3.org/2002/07/owl#Class> .\n`;
+        for (const p of o.parents) out += `<${o.iri}> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <${p}> .\n`;
+      } else {
+        const t = o.property_type === "object"
+          ? "http://www.w3.org/2002/07/owl#ObjectProperty"
+          : "http://www.w3.org/2002/07/owl#DatatypeProperty";
+        out += `<${o.iri}> a <${t}> .\n`;
+        if (o.domain) out += `<${o.iri}> <http://www.w3.org/2000/01/rdf-schema#domain> <${o.domain}> .\n`;
+        if (o.range) out += `<${o.iri}> <http://www.w3.org/2000/01/rdf-schema#range> <${o.range}> .\n`;
+        for (const p of o.parents) out += `<${o.iri}> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <${p}> .\n`;
+      }
+      if (o.label) out += `<${o.iri}> <http://www.w3.org/2000/01/rdf-schema#label> "${o.label.replaceAll('"', '\\"')}" .\n`;
+      if (o.comment) out += `<${o.iri}> <http://www.w3.org/2000/01/rdf-schema#comment> "${o.comment.replaceAll('"', '\\"')}" .\n`;
+
+      els.previewBox.textContent = out || "# 空";
+      downloadBlob("ontology_object.ttl", "text/turtle", out);
+      setStatus("已生成 TTL 片段。", "ok");
+    }
+
+    function exportSql() {
+      captureForm();
+      const payload = JSON.stringify({ ontology: state.ontology, mappings: state.mappings }, null, 2).replace(/'/g, "''");
+      const sql = [
+        "-- Prototype export",
+        "CREATE TABLE IF NOT EXISTS public.ontop_ontology_mapping_prototype_snapshots(",
+        "  id bigserial primary key,",
+        "  created_at timestamptz not null default now(),",
+        "  payload jsonb not null",
+        ");",
+        `INSERT INTO public.ontop_ontology_mapping_prototype_snapshots(payload) VALUES ('${payload}'::jsonb);`,
+        "SELECT ontop_refresh();"
+      ].join("\n");
+      els.previewBox.textContent = sql;
+      downloadBlob("ontology_mapping_prototype.sql", "text/sql", sql);
+      setStatus("已生成 SQL 脚本。", "ok");
+    }
+
+    function iriTail(iri) {
+      if (!iri) return "";
+      const p = iri.split(/[\/#]/);
+      return p[p.length - 1] || iri;
+    }
+    function escapeHtml(s) {
+      return String(s).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+    function downloadBlob(name, type, content) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function renderAll() {
+      renderList();
+      renderDetail();
+    }
+
+    function bindEvents() {
+      document.getElementById("newClassBtn").onclick = () => addOntology("class");
+      document.getElementById("newPropertyBtn").onclick = () => addOntology("property");
+      document.getElementById("cloneBtn").onclick = cloneOntology;
+      document.getElementById("deleteBtn").onclick = deleteOntology;
+      document.getElementById("newMappingBtn").onclick = addMappingForSelected;
+      document.getElementById("saveBtn").onclick = () => { captureForm(); renderAll(); setStatus("已保存草稿。", "ok"); };
+      document.getElementById("validateBtn").onclick = validateSelected;
+      document.getElementById("exportJsonBtn").onclick = exportOntologyJson;
+      document.getElementById("exportTtlBtn").onclick = exportTtl;
+      document.getElementById("exportSqlBtn").onclick = exportSql;
+
+      els.searchInput.oninput = renderList;
+      for (const id of ["iriInput", "typeInput", "propTypeInput", "labelInput", "parentsInput", "domainInput", "rangeInput", "commentInput"]) {
+        const n = document.getElementById(id);
+        n.onchange = () => {
+          if (id === "typeInput") togglePropertyFields();
+          captureForm();
+          renderList();
+          renderRelatedMappings();
+        };
+      }
+    }
+
+    loadState();
+    bindEvents();
+    renderAll();
+    setStatus("原型已加载：从本体对象列表进入详细维护。", "ok");
+  </script>
+</body>
+</html>

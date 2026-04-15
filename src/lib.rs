@@ -2,6 +2,7 @@
 
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
+use pgrx::{GucContext, GucFlags, GucRegistry, GucSetting};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
@@ -40,24 +41,90 @@ use crate::sql::FlatSQLGenerator;
 
 pgrx::pg_module_magic!();
 
+static SPARQL_HTTP_WORKERS: GucSetting<i32> = GucSetting::<i32>::new(1);
+static SPARQL_HTTP_PORT: GucSetting<i32> = GucSetting::<i32>::new(5820);
+static SPARQL_HTTP_REUSEPORT: GucSetting<bool> = GucSetting::<bool>::new(true);
+
+fn define_http_gateway_gucs() {
+    GucRegistry::define_int_guc(
+        "rs_ontop_core.http_workers",
+        "Number of SPARQL HTTP background workers",
+        "Number of background worker processes that concurrently serve the SPARQL HTTP gateway.",
+        &SPARQL_HTTP_WORKERS,
+        1,
+        64,
+        GucContext::Postmaster,
+        GucFlags::default(),
+    );
+
+    GucRegistry::define_int_guc(
+        "rs_ontop_core.http_port",
+        "SPARQL HTTP gateway port",
+        "TCP port used by the SPARQL HTTP background workers.",
+        &SPARQL_HTTP_PORT,
+        1024,
+        65535,
+        GucContext::Postmaster,
+        GucFlags::default(),
+    );
+
+    GucRegistry::define_bool_guc(
+        "rs_ontop_core.http_reuseport",
+        "Enable SO_REUSEPORT for SPARQL HTTP workers",
+        "When enabled, multiple SPARQL HTTP background workers can bind the same TCP port.",
+        &SPARQL_HTTP_REUSEPORT,
+        GucContext::Postmaster,
+        GucFlags::default(),
+    );
+}
+
+pub(crate) fn configured_http_gateway_port() -> u16 {
+    SPARQL_HTTP_PORT.get().clamp(1024, 65535) as u16
+}
+
+pub(crate) fn configured_http_gateway_reuseport() -> bool {
+    SPARQL_HTTP_REUSEPORT.get()
+}
+
+fn configured_http_gateway_workers_effective() -> usize {
+    let configured = SPARQL_HTTP_WORKERS.get().clamp(1, 64) as usize;
+    if configured > 1 && !configured_http_gateway_reuseport() {
+        log!("rs-ontop-core: rs_ontop_core.http_workers={} requires rs_ontop_core.http_reuseport=on for single-port mode; falling back to 1 worker", configured);
+        1
+    } else {
+        configured
+    }
+}
+
+fn register_http_gateway_bgworkers(dynamic: bool) {
+    let worker_count = configured_http_gateway_workers_effective();
+    for worker_id in 0..worker_count {
+        let worker_name = format!("rs_ontop_core SPARQL Web Gateway {}", worker_id);
+        let worker_extra = format!("worker_id={}", worker_id);
+        let builder = BackgroundWorkerBuilder::new(&worker_name)
+            .set_function("ontop_sparql_bgworker_main")
+            .set_library("rs_ontop_core")
+            .set_extra(&worker_extra)
+            .enable_spi_access();
+
+        if dynamic {
+            builder.load_dynamic();
+        } else {
+            builder.load();
+        }
+    }
+}
+
 #[pg_guard]
 pub unsafe extern "C-unwind" fn _PG_init() {
-    // Statistically load if placed in shared_preload_libraries
-    BackgroundWorkerBuilder::new("rs_ontop_core SPARQL Web Gateway")
-        .set_function("ontop_sparql_bgworker_main")
-        .set_library("rs_ontop_core")
-        .enable_spi_access()
-        .load();
+    define_http_gateway_gucs();
+    register_http_gateway_bgworkers(false);
 }
 
 /// 随需拉起 HTTP 守护进程（如果不想改 postgresql.conf重启，可手敲此命令拉起后台端口）
 #[pg_extern]
 fn ontop_start_sparql_server() {
-    BackgroundWorkerBuilder::new("rs_ontop_core SPARQL Web Gateway")
-        .set_function("ontop_sparql_bgworker_main")
-        .set_library("rs_ontop_core")
-        .enable_spi_access()
-        .load_dynamic();
+    register_http_gateway_bgworkers(true);
 
     // Background worker will handle its own initialization
 }
@@ -541,7 +608,7 @@ pub(crate) fn spi_execute_sparql_json_rows(
             .select(&ask_sql, None, None)
             .map_err(|e| format!("SQL execution failed: {}; debug={:?}", e, e))?;
         
-        for row in table {
+        if let Some(row) = table.into_iter().next() {
             match row.get::<bool>(1) {
                 Ok(Some(exists)) => {
                     let result = serde_json::json!({"boolean": exists});

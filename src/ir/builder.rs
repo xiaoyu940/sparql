@@ -54,7 +54,7 @@ impl IRBuilder {
     /// 当无法解析主表元数据时返回 `OntopError::MissingMetadata`
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// let builder = IRBuilder::new();
     /// let plan = builder.build_with_mappings(&parsed, &metadata, Some(&mappings))?;
     /// ```

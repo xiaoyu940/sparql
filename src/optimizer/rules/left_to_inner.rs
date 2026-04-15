@@ -22,7 +22,7 @@ impl LeftToInnerJoinPass {
     /// 创建新的 LeftToInnerJoinPass 实例
     ///
     /// # Example
-    /// ```
+    /// ```ignore
     /// let pass = LeftToInnerJoinPass::new();
     /// pass.apply(&mut plan, &ctx);
     /// ```

@@ -1,6 +1,7 @@
 use pgrx::bgworkers::*;
 use pgrx::prelude::*;
 use regex::Regex;
+use std::net::ToSocketAddrs;
 use std::time::Duration;
 use tiny_http::{Header, Method, Response, Server, StatusCode};
 use url::Url;
@@ -18,7 +19,15 @@ pub mod robust;
 #[pg_guard]
 #[no_mangle]
 pub extern "C-unwind" fn ontop_sparql_bgworker_main(_arg: pg_sys::Datum) {
-    log!("rs-ontop-core: Starting SPARQL Gateway Background Worker");
+    let worker_id = current_worker_id();
+    let listen_port = crate::configured_http_gateway_port();
+    let reuse_port = crate::configured_http_gateway_reuseport();
+    log!(
+        "rs-ontop-core: Starting SPARQL Gateway Background Worker id={}, port={}, reuseport={}",
+        worker_id,
+        listen_port,
+        reuse_port
+    );
 
     BackgroundWorker::attach_signal_handlers(SignalWakeFlags::SIGHUP | SignalWakeFlags::SIGTERM);
     BackgroundWorker::connect_worker_to_spi(Some("rs_ontop_core"), None);
@@ -35,15 +44,24 @@ pub extern "C-unwind" fn ontop_sparql_bgworker_main(_arg: pg_sys::Datum) {
     }));
     log!("rs-ontop-core: Engine initialization attempted in bgworker");
 
-    let server = match Server::http("0.0.0.0:5820") {
+    let server = match bind_http_server(listen_port, reuse_port) {
         Ok(s) => s,
         Err(e) => {
-            log!("rs-ontop-core: Failed to bind port 5820. Error: {}", e);
+            log!(
+                "rs-ontop-core: Failed to bind SPARQL HTTP server id={}, port={}, error={}",
+                worker_id,
+                listen_port,
+                e
+            );
             return;
         }
     };
 
-    log!("rs-ontop-core SPARQL Listener successfully bound to http://0.0.0.0:5820");
+    log!(
+        "rs-ontop-core SPARQL Listener id={} bound to http://0.0.0.0:{}",
+        worker_id,
+        listen_port
+    );
 
     let mut consecutive_errors = 0;
     let max_consecutive_errors = 10;
@@ -274,6 +292,59 @@ sqlstate={:?}
     }
 
     log!("rs-ontop-core: SPARQL Gateway Background Worker cleanly stopped.");
+}
+
+fn current_worker_id() -> usize {
+    let extra = BackgroundWorker::get_extra();
+    extra
+        .strip_prefix("worker_id=")
+        .and_then(|s| s.parse::<usize>().ok())
+        .unwrap_or(0)
+}
+
+fn bind_http_server(port: u16, reuse_port: bool) -> Result<Server, String> {
+    let bind_addr = format!("0.0.0.0:{}", port);
+
+    #[cfg(unix)]
+    {
+        let mut addrs = bind_addr
+            .to_socket_addrs()
+            .map_err(|e| format!("resolve {} failed: {}", bind_addr, e))?;
+        let addr = addrs
+            .next()
+            .ok_or_else(|| format!("no socket address resolved for {}", bind_addr))?;
+
+        use socket2::{Domain, Protocol, Socket, Type};
+        let domain = match addr {
+            std::net::SocketAddr::V4(_) => Domain::IPV4,
+            std::net::SocketAddr::V6(_) => Domain::IPV6,
+        };
+        let socket =
+            Socket::new(domain, Type::STREAM, Some(Protocol::TCP)).map_err(|e| e.to_string())?;
+        socket
+            .set_reuse_address(true)
+            .map_err(|e| format!("set_reuse_address failed: {}", e))?;
+        if reuse_port {
+            socket
+                .set_reuse_port(true)
+                .map_err(|e| format!("set_reuse_port failed: {}", e))?;
+        }
+        socket.bind(&addr.into()).map_err(|e| format!("bind failed: {}", e))?;
+        socket.listen(1024).map_err(|e| format!("listen failed: {}", e))?;
+        let listener: std::net::TcpListener = socket.into();
+
+        Server::from_listener(listener, None).map_err(|e| e.to_string())
+    }
+
+    #[cfg(not(unix))]
+    {
+        if reuse_port {
+            log!(
+                "rs-ontop-core: SO_REUSEPORT requested but not supported on this platform; using standard bind"
+            );
+        }
+        Server::http(bind_addr).map_err(|e| e.to_string())
+    }
 }
 
 fn with_cors_headers<R: std::io::Read + Send + 'static>(response: Response<R>) -> Response<R> {

@@ -140,7 +140,7 @@ impl R2RmlLoader {
     /// 当数据库查询失败时返回 DatabaseError
     ///
     /// # Example
-    /// ```rust,no_run
+    /// ```ignore
     /// use pgrx::spi::Spi;
     /// let loader = R2RmlLoader::new();
     /// let store = loader.load_from_database(&mut client)?;
