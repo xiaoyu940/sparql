@@ -96,9 +96,22 @@ fn configured_http_gateway_workers_effective() -> usize {
     }
 }
 
-fn register_http_gateway_bgworkers(dynamic: bool) {
-    let worker_count = configured_http_gateway_workers_effective();
-    for worker_id in 0..worker_count {
+const HTTP_WORKER_LOCK_KEY: i64 = 0x52534f4e_4854574b;
+const HTTP_WORKER_APPNAME_PREFIX: &str = "rs_ontop_core SPARQL Web Gateway";
+
+fn count_alive_http_gateway_workers() -> Result<usize, String> {
+    let sql = format!(
+        "SELECT COUNT(*)::int4\n         FROM pg_stat_activity\n         WHERE application_name LIKE '{}%'\n           AND state <> 'idle in transaction (aborted)'",
+        HTTP_WORKER_APPNAME_PREFIX
+    );
+
+    Spi::get_one::<i32>(&sql)
+        .map_err(|e| format!("count alive gateway workers failed: {}", e))
+        .map(|opt| opt.unwrap_or(0).max(0) as usize)
+}
+
+fn register_http_gateway_bgworkers(dynamic: bool, start_worker_id: usize, worker_count: usize) {
+    for worker_id in start_worker_id..(start_worker_id + worker_count) {
         let worker_name = format!("rs_ontop_core SPARQL Web Gateway {}", worker_id);
         let worker_extra = format!("worker_id={}", worker_id);
         let builder = BackgroundWorkerBuilder::new(&worker_name)
@@ -118,15 +131,49 @@ fn register_http_gateway_bgworkers(dynamic: bool) {
 #[pg_guard]
 pub unsafe extern "C-unwind" fn _PG_init() {
     define_http_gateway_gucs();
-    register_http_gateway_bgworkers(false);
+    let worker_count = configured_http_gateway_workers_effective();
+    register_http_gateway_bgworkers(false, 0, worker_count);
 }
 
 /// 随需拉起 HTTP 守护进程（如果不想改 postgresql.conf重启，可手敲此命令拉起后台端口）
 #[pg_extern]
-fn ontop_start_sparql_server() {
-    register_http_gateway_bgworkers(true);
+fn ontop_start_sparql_server() -> String {
+    // Serialize concurrent start calls to avoid over-provisioning workers.
+    let lock_acquired = match Spi::get_one::<bool>(&format!(
+        "SELECT pg_try_advisory_lock({})",
+        HTTP_WORKER_LOCK_KEY
+    )) {
+        Ok(Some(v)) => v,
+        Ok(None) => false,
+        Err(e) => return format!("failed to acquire advisory lock: {}", e),
+    };
+    if !lock_acquired {
+        return "another session is starting SPARQL workers; please retry".to_string();
+    }
 
-    // Background worker will handle its own initialization
+    let result = (|| {
+        let target = configured_http_gateway_workers_effective();
+        let alive = count_alive_http_gateway_workers()?;
+        let delta = target.saturating_sub(alive);
+        let mut started = 0usize;
+
+        if delta > 0 {
+            register_http_gateway_bgworkers(true, alive, delta);
+            started = delta;
+        }
+
+        Ok::<String, String>(format!(
+            "SPARQL HTTP workers target={}, alive={}, started={}",
+            target, alive, started
+        ))
+    })();
+
+    let _ = Spi::run(&format!("SELECT pg_advisory_unlock({})", HTTP_WORKER_LOCK_KEY));
+
+    match result {
+        Ok(msg) => msg,
+        Err(e) => format!("failed to start SPARQL workers: {}", e),
+    }
 }
 
 /// Global engine instance (wrapped in Mutex for thread-safety in PG)
