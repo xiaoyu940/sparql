@@ -1,0 +1,1809 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPARQL 查询测试工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        header h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .endpoint-config {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .endpoint-config label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .endpoint-config input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .cors-warning {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #856404;
+        }
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 1024px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .preset-queries select {
+            width: 100%;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        .result-stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .result-content {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow: auto;
+        }
+        .result-content table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .result-content th, .result-content td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .result-content th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-loading { background: #fff3cd; color: #856404; }
+        .loading-spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #856404;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        /* AI 助手样式 */
+        .ai-assistant-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .ai-assistant-panel .panel-title {
+            color: white;
+            font-size: 1.1rem;
+        }
+        .ai-config {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .ai-config label {
+            color: white;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .ai-config input, .ai-config select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        .ai-input-area textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        .ai-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-ai {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-ai:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+        }
+        .ai-suggestion {
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestion-header span {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        #ai-generated-sparql {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        /* AI 面板瀑布流布局 */
+        #panel-ai {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 220px);
+        }
+        #panel-ai .ai-assistant-panel {
+            flex-shrink: 0;
+        }
+        /* 瀑布流对话样式 */
+        .chat-waterfall {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 0;
+        }
+        .chat-waterfall .chat-message {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+        }
+        .chat-waterfall .chat-message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .chat-waterfall .chat-message.ai {
+            align-self: flex-start;
+        }
+        .chat-waterfall .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .chat-waterfall .chat-message.ai .chat-avatar {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .chat-waterfall .chat-bubble {
+            padding: 14px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .chat-waterfall .chat-message.user .chat-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-waterfall .chat-message.ai .chat-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        /* 结果表格在消息中的样式 */
+        .chat-bubble .result-table-wrapper {
+            margin-top: 12px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .chat-bubble .result-table-wrapper table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .chat-bubble .result-table-wrapper th {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        .chat-bubble .result-table-wrapper td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        .chat-bubble .result-table-wrapper tr:last-child td {
+            border-bottom: none;
+        }
+        .chat-bubble .result-meta {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            gap: 15px;
+        }
+        .chat-bubble .result-error {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fee;
+            color: #c33;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        /* 本体管理样式 */
+        .ontology-editor {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .ontology-editor .editor-toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            align-items: center;
+        }
+        .ontology-editor textarea {
+            min-height: 400px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            padding: 15px;
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            resize: vertical;
+        }
+        .ontology-help {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 15px;
+        }
+        .ontology-help h4 {
+            margin: 0 0 12px 0;
+            color: #1976D2;
+        }
+        .ontology-help ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .ontology-help code {
+            background: rgba(33, 150, 243, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #1976D2;
+            font-family: 'Consolas', monospace;
+        }
+        /* Tab 导航样式 */
+        .tab-nav {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
+            border-radius: 12px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            background: transparent;
+            color: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* AI对话样式优化 */
+        .chat-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: calc(100vh - 250px);
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .chat-message {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .chat-message.user .chat-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .chat-message.ai .chat-avatar {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .chat-bubble {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .chat-message.user .chat-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .chat-message.ai .chat-bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .chat-input-area {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-area textarea {
+            flex: 1;
+            min-height: 50px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+        }
+        .chat-input-area textarea:focus {
+            border-color: #667eea;
+        }
+        .chat-send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .chat-message pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 8px;
+        }
+        .apply-query-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .apply-query-btn:hover {
+            background: #5a6fd6;
+        }
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .btn-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .btn-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .modal-body {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        #ontology-content {
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 SPARQL 查询测试工具</h1>
+            <p>端口号: 5820</p>
+        </header>
+
+        <!-- Tab 导航 -->
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('ai')" id="tab-ai">
+                🤖 DeepSeek 智能助手
+            </button>
+            <button class="tab-btn" onclick="switchTab('tester')" id="tab-tester">
+                📝 SPARQL 测试工具
+            </button>
+            <button class="tab-btn" onclick="switchTab('ontology')" id="tab-ontology">
+                📚 本体管理
+            </button>
+        </div>
+
+        <div class="endpoint-config">
+            <label>SPARQL Endpoint URL</label>
+            <input type="text" id="endpoint" value="http://localhost:5820/sparql" placeholder="输入SPARQL端点地址">
+            <div class="cors-warning">
+                <strong>⚠️ CORS 注意:</strong> 如果从 file:// 协议打开，需用HTTP服务器访问，或启动浏览器时禁用安全策略（仅开发用）
+            </div>
+        </div>
+
+        <!-- Tab 1: DeepSeek AI 助手 -->
+        <div id="panel-ai" class="tab-panel active">
+            <div class="ai-assistant-panel">
+                <div class="panel-header">
+                    <div class="panel-title">🤖 DeepSeek AI 助手 - 自然语言生成 SPARQL</div>
+                </div>
+                <div class="ai-config">
+                    <label>DeepSeek API Key</label>
+                    <input type="password" id="api-key" value="sk-ca4949cc8bd54640b768e49cedbeb14f" style="flex:1;">
+                    <select id="ai-model" style="width:150px;">
+                        <option value="deepseek-chat">deepseek-chat</option>
+                        <option value="deepseek-reasoner">deepseek-reasoner</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 对话界面 - 瀑布流模式 -->
+            <div class="chat-waterfall" id="chat-waterfall">
+                <div class="chat-message ai">
+                    <div class="chat-avatar">🤖</div>
+                    <div class="chat-bubble">
+                        你好！我是 DeepSeek AI 助手。请用自然语言描述你想查询的内容，我会帮你生成 SPARQL 查询并自动执行。<br><br>
+                        例如：<br>
+                        • 查找所有薪资超过8万的员工及其部门<br>
+                        • 统计每个部门的平均薪资并按降序排列<br>
+                        • 找出2020年后入职的Engineering部门员工
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="chat-input" placeholder="输入你的查询需求，Ctrl+Enter发送..." onkeydown="handleChatKeydown(event)"></textarea>
+                <button class="chat-send-btn" onclick="sendChatMessage()">➤</button>
+            </div>
+        </div>
+
+        <!-- Tab 2: SPARQL 测试工具 -->
+        <div id="panel-tester" class="tab-panel">
+            <div class="main-layout">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">📝 查询编辑器</div>
+                        <div id="query-status"></div>
+                    </div>
+
+                    <div class="preset-queries">
+                        <select id="preset-select" onchange="loadPreset()">
+                            <option value="">📋 选择预设查询...</option>
+                            <optgroup label="基础查询">
+                                <option value="basic">SELECT - 所有员工</option>
+                                <option value="distinct">DISTINCT - 部门列表</option>
+                                <option value="order_offset">ORDER + OFFSET - 分页查询</option>
+                                <option value="ask">ASK - 条件验证</option>
+                            </optgroup>
+                            <optgroup label="JOIN与关联">
+                                <option value="join">JOIN - 员工及部门</option>
+                                <option value="optional">OPTIONAL - 可选属性</option>
+                                <option value="union">UNION - 合并结果</option>
+                            </optgroup>
+                            <optgroup label="过滤条件">
+                                <option value="filter">FILTER - 高薪员工(&gt;80k)</option>
+                                <option value="filter_str">FILTER - 部门名称匹配</option>
+                                <option value="filter_date">FILTER - 日期范围</option>
+                                <option value="in_filter">IN - 多值匹配</option>
+                                <option value="exists">EXISTS - 存在性检查</option>
+                                <option value="values">VALUES - 枚举匹配</option>
+                            </optgroup>
+                            <optgroup label="聚合函数">
+                                <option value="aggregate">COUNT - 部门人数统计</option>
+                                <option value="avg_salary">AVG - 平均薪资</option>
+                                <option value="sum_dept">SUM + HAVING - 薪资总计</option>
+                            </optgroup>
+                            <optgroup label="表达式与绑定">
+                                <option value="bind">BIND - 计算表达式</option>
+                                <option value="coalesce">COALESCE - 空值处理</option>
+                            </optgroup>
+                            <optgroup label="高级特性">
+                                <option value="subquery">子查询 - 高于平均值</option>
+                                <option value="construct">CONSTRUCT - 构造三元组</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <div class="toolbar">
+                        <button class="btn btn-primary" onclick="executeQuery()">▶ 执行查询</button>
+                        <button class="btn btn-secondary" onclick="clearQuery()">🗑️ 清空</button>
+                    </div>
+
+                    <textarea id="query-editor" placeholder="在此输入SPARQL查询...">PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName .
+}
+LIMIT 10</textarea>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">📊 查询结果</div>
+                    </div>
+                    <div id="result-stats" class="result-stats" style="display: none;">
+                        <span>⏱️ 耗时: <strong id="exec-time">-</strong></span>
+                        <span>📄 结果数: <strong id="row-count">-</strong></span>
+                    </div>
+                    <div id="error-display" class="error-message" style="display: none;"></div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 12px; color: #666;">
+                            <input type="checkbox" id="debug-mode" style="margin-right: 5px;"> 调试模式 (显示原始JSON)
+                        </label>
+                    </div>
+                    <div class="result-content" id="result-display">
+                        <div style="color: #999; text-align: center; padding: 50px 0;">
+                            💡 点击"执行查询"查看结果
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: 本体管理 -->
+        <div id="panel-ontology" class="tab-panel">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📚 本体 (Ontology) 管理</div>
+                </div>
+                <div class="ontology-editor">
+                    <div class="editor-toolbar">
+                        <button class="btn btn-sm" onclick="resetOntology()">🔄 重置为默认</button>
+                        <button class="btn btn-sm btn-primary" onclick="saveOntology()">💾 保存修改</button>
+                        <span id="ontology-status" style="margin-left:10px;color:#666;font-size:12px;"></span>
+                    </div>
+                    <textarea id="ontology-editor" placeholder="在此编辑本体定义 (Turtle格式)...">@prefix ex: <http://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# 类定义
+ex:Employee a rdfs:Class ;
+    rdfs:label "员工" ;
+    rdfs:comment "公司员工" .
+
+ex:Department a rdfs:Class ;
+    rdfs:label "部门" ;
+    rdfs:comment "公司部门" .
+
+ex:Position a rdfs:Class ;
+    rdfs:label "职位" ;
+    rdfs:comment "公司职位" .
+
+# 属性定义
+ex:first_name a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "名字" .
+
+ex:last_name a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "姓氏" .
+
+ex:email a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "邮箱" .
+
+ex:salary a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "薪资(月薪)" .
+
+ex:hire_date a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:date ;
+    rdfs:label "入职日期" .
+
+ex:department_id a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range ex:Department ;
+    rdfs:label "所属部门" .
+
+ex:department_name a rdf:Property ;
+    rdfs:domain ex:Department ;
+    rdfs:range xsd:string ;
+    rdfs:label "部门名称" .
+
+ex:position_title a rdf:Property ;
+    rdfs:domain ex:Position ;
+    rdfs:range xsd:string ;
+    rdfs:label "职位名称" .</textarea>
+                </div>
+                <div class="ontology-help">
+                    <h4>📖 本体编辑指南</h4>
+                    <ul>
+                        <li><strong>类定义</strong>: <code>ex:ClassName a rdfs:Class</code></li>
+                        <li><strong>属性定义</strong>: <code>ex:property a rdf:Property</code></li>
+                        <li><strong>定义域</strong>: <code>rdfs:domain</code> - 属性适用的类</li>
+                        <li><strong>值域</strong>: <code>rdfs:range</code> - 属性值的类型</li>
+                        <li><strong>标签</strong>: <code>rdfs:label</code> - 显示名称</li>
+                        <li><strong>注释</strong>: <code>rdfs:comment</code> - 详细说明</li>
+                    </ul>
+                    <p style="color:#666;font-size:12px;margin-top:10px;">
+                        💡 修改本体后保存，AI助手会自动使用新的本体定义来生成SPARQL查询。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const presets = {
+            basic: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?email
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:email ?email .
+}
+LIMIT 20`,
+            join: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?deptName
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:department_id ?dept .
+    ?dept ex:department_name ?deptName .
+}
+LIMIT 10`,
+            filter: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?salary
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:salary ?salary .
+    FILTER(?salary > 80000)
+}
+ORDER BY DESC(?salary)
+LIMIT 10`,
+            filter_str: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:department_name ?deptName .
+    FILTER(CONTAINS(LCASE(?deptName), "engineering"))
+}
+LIMIT 10`,
+            filter_date: `PREFIX ex: <http://example.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+SELECT ?firstName ?lastName ?hireDate
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:hire_date ?hireDate .
+    FILTER(?hireDate >= "2020-01-01"^^xsd:date)
+}
+ORDER BY ?hireDate
+LIMIT 10`,
+            optional: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?phone
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName .
+    OPTIONAL { ?emp ex:phone ?phone }
+}
+LIMIT 10`,
+            union: `PREFIX ex: <http://example.org/>
+SELECT ?name ?type
+WHERE {
+    { ?dept ex:department_name ?name . BIND("Department" AS ?type) }
+    UNION
+    { ?pos ex:position_title ?name . BIND("Position" AS ?type) }
+}
+LIMIT 20`,
+            aggregate: `PREFIX ex: <http://example.org/>
+SELECT ?deptName (COUNT(?emp) AS ?empCount)
+WHERE {
+    ?emp ex:department_id ?dept .
+    ?dept ex:department_name ?deptName .
+}
+GROUP BY ?deptName
+ORDER BY DESC(?empCount)`,
+            avg_salary: `PREFIX ex: <http://example.org/>
+SELECT ?deptName (AVG(?salary) AS ?avgSalary)
+WHERE {
+    ?emp ex:department_id ?dept ;
+         ex:salary ?salary .
+    ?dept ex:department_name ?deptName .
+}
+GROUP BY ?deptName
+ORDER BY DESC(?avgSalary)`,
+            bind: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?fullName ?annualSalary
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:salary ?monthlySal .
+    BIND(CONCAT(?firstName, " ", ?lastName) AS ?fullName)
+    BIND(?monthlySal * 12 AS ?annualSalary)
+}
+ORDER BY DESC(?annualSalary)
+LIMIT 10`,
+            subquery: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?salary
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:salary ?salary .
+    {
+        SELECT (AVG(?s) AS ?avgSal)
+        WHERE { ?e ex:salary ?s }
+    }
+    FILTER(?salary > ?avgSal)
+}
+ORDER BY DESC(?salary)
+LIMIT 10`,
+            exists: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName .
+    FILTER EXISTS {
+        ?emp ex:salary ?salary .
+        FILTER(?salary > 100000)
+    }
+}
+LIMIT 10`,
+            order_offset: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?salary
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:salary ?salary .
+}
+ORDER BY DESC(?salary)
+OFFSET 5
+LIMIT 5`,
+            distinct: `PREFIX ex: <http://example.org/>
+SELECT DISTINCT ?deptName
+WHERE {
+    ?emp ex:department_id ?dept .
+    ?dept ex:department_name ?deptName .
+}
+ORDER BY ?deptName`,
+            ask: `PREFIX ex: <http://example.org/>
+ASK {
+    ?emp ex:first_name "John" .
+    ?emp ex:salary ?salary .
+    FILTER(?salary > 50000)
+}`,
+            construct: `PREFIX ex: <http://example.org/>
+CONSTRUCT {
+    ?emp ex:fullName ?fullName ;
+           ex:annualComp ?annualComp .
+}
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:salary ?salary .
+    BIND(CONCAT(?firstName, " ", ?lastName) AS ?fullName)
+    BIND(?salary * 12 AS ?annualComp)
+}
+LIMIT 5`,
+            values: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?deptName
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:department_id ?dept .
+    ?dept ex:department_name ?deptName .
+    VALUES ?deptName { "Engineering" "Sales" }
+}
+LIMIT 10`,
+            in_filter: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName ?deptName
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:department_id ?dept .
+    ?dept ex:department_name ?deptName .
+    FILTER(?deptName IN ("Engineering", "Marketing", "Sales"))
+}
+ORDER BY ?deptName
+LIMIT 20`,
+            coalesce: `PREFIX ex: <http://example.org/>
+SELECT ?firstName ?lastName (COALESCE(?phone, ?email, "N/A") AS ?contact)
+WHERE {
+    ?emp ex:first_name ?firstName ;
+         ex:last_name ?lastName ;
+         ex:email ?email .
+    OPTIONAL { ?emp ex:phone ?phone }
+}
+LIMIT 10`,
+            sum_dept: `PREFIX ex: <http://example.org/>
+SELECT ?deptName (SUM(?salary) AS ?totalPayroll) (COUNT(?emp) AS ?empCount)
+WHERE {
+    ?emp ex:department_id ?dept ;
+         ex:salary ?salary .
+    ?dept ex:department_name ?deptName .
+}
+GROUP BY ?deptName
+HAVING (SUM(?salary) > 1000000)
+ORDER BY DESC(?totalPayroll)`
+        };
+
+        function loadPreset() {
+            const key = document.getElementById('preset-select').value;
+            if (key && presets[key]) {
+                document.getElementById('query-editor').value = presets[key];
+            }
+        }
+
+        function clearQuery() {
+            document.getElementById('query-editor').value = '';
+            document.getElementById('preset-select').value = '';
+        }
+
+        function setStatus(status, msg) {
+            document.getElementById('query-status').innerHTML = 
+                `<span class="status-indicator status-${status}">${msg}</span>`;
+        }
+
+        async function executeQuery() {
+            const endpoint = document.getElementById('endpoint').value.trim();
+            const query = document.getElementById('query-editor').value.trim();
+            const resultDisplay = document.getElementById('result-display');
+            const resultStats = document.getElementById('result-stats');
+            const errorDisplay = document.getElementById('error-display');
+
+            if (!endpoint || !query) {
+                alert('请输入端点地址和SPARQL查询');
+                return;
+            }
+
+            setStatus('loading', '<div class="loading-spinner"></div> 执行中...');
+            errorDisplay.style.display = 'none';
+            resultStats.style.display = 'none';
+            resultDisplay.innerHTML = '<div style="text-align:center;padding:50px;"><div class="loading-spinner" style="margin:0 auto 10px;"></div>执行中...</div>';
+
+            const startTime = performance.now();
+
+            try {
+                // 尝试多种方式
+                let response = null;
+                let errors = [];
+
+                // 方式1: POST + application/sparql-query
+                try {
+                    response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/sparql-query',
+                            'Accept': 'application/sparql-results+json'
+                        },
+                        body: query
+                    });
+                } catch (e) { errors.push('POST sparql-query: ' + e.message); }
+
+                // 方式2: POST + form-urlencoded
+                if (!response || !response.ok) {
+                    try {
+                        response = await fetch(endpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Accept': 'application/sparql-results+json'
+                            },
+                            body: 'query=' + encodeURIComponent(query)
+                        });
+                    } catch (e) { errors.push('POST form: ' + e.message); }
+                }
+
+                // 方式3: GET
+                if (!response || !response.ok) {
+                    try {
+                        const url = endpoint + '?query=' + encodeURIComponent(query);
+                        response = await fetch(url, {
+                            method: 'GET',
+                            headers: { 'Accept': 'application/sparql-results+json' }
+                        });
+                    } catch (e) { errors.push('GET: ' + e.message); }
+                }
+
+                if (!response) {
+                    throw new Error('无法连接端点。请确保:<br>1. 服务在5820端口运行<br>2. 无CORS限制<br><br>错误: ' + errors.join('<br>'));
+                }
+
+                const execTime = ((performance.now() - startTime) / 1000).toFixed(2);
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error('HTTP ' + response.status + ': ' + text);
+                }
+
+                const data = await response.json();
+
+                // ASK结果
+                if (data.boolean !== undefined) {
+                    resultStats.style.display = 'none';
+                    resultDisplay.innerHTML = `
+                        <div style="text-align:center;padding:50px;">
+                            <div style="font-size:64px;margin-bottom:20px;">${data.boolean ? '✅' : '❌'}</div>
+                            <div style="font-size:24px;font-weight:600;">${data.boolean ? 'TRUE' : 'FALSE'}</div>
+                        </div>`;
+                    setStatus('success', '✓ 执行成功');
+                    return;
+                }
+
+                // 调试模式 - 显示原始JSON
+                if (document.getElementById('debug-mode').checked) {
+                    resultDisplay.innerHTML = '<pre style="font-size:11px;overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>';
+                    setStatus('success', '✓ 执行成功 (调试模式)');
+                    return;
+                }
+
+                // SELECT结果
+                if (data.results && data.results.bindings) {
+                    const bindings = data.results.bindings;
+                    const vars = data.head.vars;
+
+                    resultStats.style.display = 'flex';
+                    document.getElementById('exec-time').textContent = execTime + 's';
+                    document.getElementById('row-count').textContent = bindings.length;
+
+                    if (bindings.length === 0) {
+                        resultDisplay.innerHTML = '<div style="text-align:center;padding:50px;color:#999;">📭 空结果</div>';
+                    } else {
+                        let html = '<div style="overflow:auto;"><table><tr>';
+                        vars.forEach(v => html += `<th>${v}</th>`);
+                        html += '</tr>';
+
+                        bindings.forEach((row, idx) => {
+                            html += '<tr>';
+                            vars.forEach(v => {
+                                const cell = row[v];
+                                let val = '-';
+                                if (cell && cell.value !== undefined && cell.value !== null && cell.value !== '') {
+                                    val = cell.value;
+                                }
+                                html += `<td>${val}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+
+                        html += '</table></div>';
+                        resultDisplay.innerHTML = html;
+                    }
+                    setStatus('success', '✓ 执行成功');
+                } else {
+                    resultDisplay.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    setStatus('success', '✓ 执行成功');
+                }
+
+            } catch (error) {
+                setStatus('error', '✗ 执行失败');
+                errorDisplay.style.display = 'block';
+                errorDisplay.innerHTML = '<strong>❌ 错误:</strong><br>' + error.message;
+                resultDisplay.innerHTML = '<div style="text-align:center;padding:50px;color:#999;">❌ 执行失败</div>';
+            }
+        }
+
+        // ==================== DeepSeek AI 助手功能 ====================
+        
+        // 本体定义
+        const ontologyDefinition = `@prefix ex: <http://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# 类定义
+ex:Employee a rdfs:Class ;
+    rdfs:label "员工" ;
+    rdfs:comment "公司员工" .
+
+ex:Department a rdfs:Class ;
+    rdfs:label "部门" ;
+    rdfs:comment "公司部门" .
+
+ex:Position a rdfs:Class ;
+    rdfs:label "职位" ;
+    rdfs:comment "公司职位" .
+
+# 属性定义
+ex:first_name a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "名字" .
+
+ex:last_name a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "姓氏" .
+
+ex:email a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "邮箱" .
+
+ex:salary a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "薪资(月薪)" .
+
+ex:hire_date a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:date ;
+    rdfs:label "入职日期" .
+
+ex:department_id a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range ex:Department ;
+    rdfs:label "所属部门" .
+
+ex:department_name a rdf:Property ;
+    rdfs:domain ex:Department ;
+    rdfs:range xsd:string ;
+    rdfs:label "部门名称" .
+
+ex:position_title a rdf:Property ;
+    rdfs:domain ex:Position ;
+    rdfs:range xsd:string ;
+    rdfs:label "职位名称" .
+
+# 常用查询模式
+1. 员工基础信息: ?emp ex:first_name ?fn ; ex:last_name ?ln ; ex:email ?email
+2. 员工部门关联: ?emp ex:department_id ?dept . ?dept ex:department_name ?deptName
+3. 薪资过滤: FILTER(?salary > 80000)
+4. 字符串匹配: FILTER(CONTAINS(LCASE(?name), "keyword"))
+5. 日期过滤: FILTER(?date >= "2020-01-01"^^xsd:date)
+6. 聚合统计: SELECT ?dept (COUNT(?emp) AS ?count) (AVG(?salary) AS ?avgSal)
+7. 可选属性: OPTIONAL { ?emp ex:phone ?phone }
+8. 存在性检查: FILTER EXISTS { ?emp ex:salary ?s . FILTER(?s > 100000) }`;
+
+        let currentAiQuery = '';
+
+        // 生成 SPARQL 查询
+        async function generateSparql() {
+            const apiKey = document.getElementById('api-key').value.trim();
+            const model = document.getElementById('ai-model').value;
+            const naturalLang = document.getElementById('natural-language-input').value.trim();
+            const statusEl = document.getElementById('ai-status');
+            const suggestionEl = document.getElementById('ai-suggestion');
+            const generatedEl = document.getElementById('ai-generated-sparql');
+
+            if (!apiKey) {
+                alert('请输入 DeepSeek API Key');
+                return;
+            }
+            if (!naturalLang) {
+                alert('请输入自然语言描述');
+                return;
+            }
+
+            statusEl.textContent = '🔄 正在生成...';
+            
+            try {
+                const response = await fetch('https://api.deepseek.com/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `你是一个 SPARQL 查询生成专家。基于以下本体定义，将用户的自然语言转换为标准的 SPARQL 1.1 查询。\n\n本体定义:\n${ontologyDefinition}\n\n规则:\n1. 始终使用 PREFIX ex: <http://example.org/>\n2. 生成标准 SPARQL SELECT/ASK/CONSTRUCT 查询\n3. 只返回 SPARQL 代码，不要解释\n4. 确保查询语法正确，变量命名清晰\n5. 适当使用 LIMIT 限制结果数量`
+                            },
+                            {
+                                role: 'user',
+                                content: naturalLang
+                            }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 1000
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || 'API 调用失败');
+                }
+
+                const data = await response.json();
+                currentAiQuery = data.choices[0].message.content.trim();
+                
+                // 清理代码块标记
+                currentAiQuery = currentAiQuery.replace(/^\`\`\`sparql\s*/, '')
+                                                .replace(/^\`\`\`\s*/, '')
+                                                .replace(/\`\`\`$/, '');
+                
+                generatedEl.textContent = currentAiQuery;
+                suggestionEl.style.display = 'block';
+                statusEl.textContent = '✅ 生成成功';
+                
+            } catch (error) {
+                statusEl.textContent = '❌ 生成失败: ' + error.message;
+                console.error('DeepSeek API error:', error);
+            }
+        }
+
+        // 应用 AI 生成的查询
+        function applyAiQuery() {
+            if (currentAiQuery) {
+                document.getElementById('query-editor').value = currentAiQuery;
+                document.getElementById('ai-suggestion').style.display = 'none';
+                document.getElementById('ai-status').textContent = '✅ 已应用到编辑器';
+            }
+        }
+
+        // 切换到本体管理Tab
+        function showOntology() {
+            switchTab('ontology');
+        }
+
+        // ==================== Tab 切换功能 ====================
+        function switchTab(tabName) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            // 更新面板显示
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById('panel-' + tabName).classList.add('active');
+        }
+
+        // ==================== AI 对话功能 (支持 SSE 流式响应) ====================
+        function handleChatKeydown(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        // 创建流式消息元素
+        function createStreamingMessage() {
+            const messagesEl = document.getElementById('chat-waterfall');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ai streaming';
+            messageDiv.id = 'streaming-msg-' + Date.now();
+            messageDiv.innerHTML = `
+                <div class="chat-avatar">🤖</div>
+                <div class="chat-bubble">
+                    <div class="streaming-content" style="min-height:20px;"></div>
+                </div>
+            `;
+            messagesEl.appendChild(messageDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+            return messageDiv.querySelector('.streaming-content');
+        }
+
+        async function sendChatMessage() {
+            const inputEl = document.getElementById('chat-input');
+            const apiKey = document.getElementById('api-key').value.trim();
+            const model = document.getElementById('ai-model').value;
+            const message = inputEl.value.trim();
+
+            if (!message) return;
+            if (!apiKey) {
+                alert('请输入 DeepSeek API Key');
+                return;
+            }
+
+            // 添加用户消息
+            addChatMessage('user', message);
+            inputEl.value = '';
+
+            // 创建流式消息容器
+            const streamingContent = createStreamingMessage();
+            let fullResponse = '';
+
+            try {
+                const response = await fetch('https://api.deepseek.com/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Accept': 'text/event-stream'
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: `你是一个 SPARQL 查询生成专家。基于以下本体定义，将用户的自然语言转换为标准的 SPARQL 1.1 查询。\n\n本体定义:\n${ontologyDefinition}\n\n规则:\n1. 始终使用 PREFIX ex: <http://example.org/>\n2. 生成标准 SPARQL SELECT/ASK/CONSTRUCT 查询\n3. 只返回 SPARQL 代码，不要解释\n4. 确保查询语法正确，变量命名清晰\n5. 适当使用 LIMIT 限制结果数量\n6. 返回格式：先简要说明查询意图，然后提供SPARQL代码（用代码块包裹）`
+                            },
+                            {
+                                role: 'user',
+                                content: message
+                            }
+                        ],
+                        temperature: 0.3,
+                        max_tokens: 1000,
+                        stream: true  // 启用流式响应
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API 调用失败: ' + response.status);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value, { stream: true });
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const delta = parsed.choices?.[0]?.delta?.content;
+                                if (delta) {
+                                    fullResponse += delta;
+                                    // 实时更新显示（去除代码块标记，纯文本显示）
+                                    streamingContent.textContent = fullResponse.replace(/```\w*\n?/g, '').replace(/```/g, '');
+                                    // 滚动到底部
+                                    const waterfall = document.getElementById('chat-waterfall');
+                                    waterfall.scrollTop = waterfall.scrollHeight;
+                                }
+                            } catch (e) {
+                                // 忽略解析错误
+                            }
+                        }
+                    }
+                }
+
+                // 流式传输完成，提取SPARQL并自动执行
+                const codeMatch = fullResponse.match(/```(?:sparql)?\s*([\s\S]*?)```/);
+                if (codeMatch) {
+                    currentAiQuery = codeMatch[1].trim();
+                    // 显示最终消息（带代码块高亮）
+                    streamingContent.parentElement.parentElement.remove();
+                    addChatMessage('ai', fullResponse, true);
+                    // 自动执行SPARQL
+                    addChatMessage('ai', '⏳ 正在自动执行生成的SPARQL查询...');
+                    await executeChatQueryAuto();
+                } else {
+                    streamingContent.parentElement.parentElement.remove();
+                    addChatMessage('ai', fullResponse);
+                }
+
+            } catch (error) {
+                streamingContent.parentElement.parentElement.remove();
+                addChatMessage('ai', '❌ 生成失败: ' + error.message);
+            }
+        }
+
+        // 自动执行SPARQL（在聊天界面）- 结果显示在消息流中
+        async function executeChatQueryAuto() {
+            if (!currentAiQuery) return;
+
+            const endpoint = document.getElementById('endpoint').value.trim();
+            const startTime = performance.now();
+
+            try {
+                let response = null;
+                // 尝试多种请求方式
+                const methods = [
+                    { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/sparql-query', 'Accept': 'application/sparql-results+json' },
+                        body: currentAiQuery 
+                    },
+                    { 
+                        method: 'POST', 
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/sparql-results+json' },
+                        body: 'query=' + encodeURIComponent(currentAiQuery) 
+                    },
+                    { 
+                        method: 'GET', 
+                        url: endpoint + '?query=' + encodeURIComponent(currentAiQuery),
+                        headers: { 'Accept': 'application/sparql-results+json' }
+                    }
+                ];
+
+                for (const m of methods) {
+                    try {
+                        if (m.url) {
+                            response = await fetch(m.url, { method: m.method, headers: m.headers });
+                        } else {
+                            response = await fetch(endpoint, { method: m.method, headers: m.headers, body: m.body });
+                        }
+                        if (response.ok) break;
+                    } catch (e) {}
+                }
+
+                if (!response || !response.ok) {
+                    throw new Error('无法连接到SPARQL端点');
+                }
+
+                const execTime = ((performance.now() - startTime) / 1000).toFixed(2);
+                const data = await response.json();
+
+                // 构建结果消息
+                let resultHtml = '';
+                
+                // ASK结果
+                if (data.boolean !== undefined) {
+                    resultHtml = `
+                        <div style="text-align:center;padding:15px;background:#f8f9fa;border-radius:8px;margin-bottom:10px;">
+                            <div style="font-size:36px;margin-bottom:5px;">${data.boolean ? '✅' : '❌'}</div>
+                            <div style="font-size:18px;font-weight:600;">${data.boolean ? 'TRUE' : 'FALSE'}</div>
+                        </div>`;
+                    addChatMessage('ai', resultHtml + `<div class="result-meta">⏱️ ${execTime}s | 结果: ${data.boolean ? 'TRUE' : 'FALSE'}</div>`, false, true);
+                    return;
+                }
+
+                // SELECT结果
+                if (data.results && data.results.bindings) {
+                    const bindings = data.results.bindings;
+                    const vars = data.head.vars;
+
+                    if (bindings.length === 0) {
+                        addChatMessage('ai', '<div style="text-align:center;padding:20px;color:#999;">📭 空结果</div>' + `<div class="result-meta">⏱️ ${execTime}s | 返回 0 条结果</div>`, false, true);
+                    } else {
+                        let html = '<div class="result-table-wrapper"><table><tr>';
+                        vars.forEach(v => html += `<th>${v}</th>`);
+                        html += '</tr>';
+
+                        bindings.slice(0, 20).forEach(row => {
+                            html += '<tr>';
+                            vars.forEach(v => {
+                                const cell = row[v];
+                                let val = '-';
+                                if (cell && cell.value !== undefined && cell.value !== null && cell.value !== '') {
+                                    val = cell.value;
+                                }
+                                html += `<td>${escapeHtml(val.toString())}</td>`;
+                            });
+                            html += '</tr>';
+                        });
+
+                        if (bindings.length > 20) {
+                            html += `<tr><td colspan="${vars.length}" style="text-align:center;padding:8px;color:#666;font-style:italic;">... 还有 ${bindings.length - 20} 条结果 ...</td></tr>`;
+                        }
+
+                        html += '</table></div>';
+                        html += `<div class="result-meta">⏱️ ${execTime}s | 返回 ${bindings.length} 条结果</div>`;
+                        addChatMessage('ai', html, false, true);
+                    }
+                } else {
+                    addChatMessage('ai', '<pre style="font-size:11px;overflow:auto;background:white;padding:10px;border-radius:6px;">' + JSON.stringify(data, null, 2) + '</pre>' + `<div class="result-meta">⏱️ ${execTime}s</div>`, false, true);
+                }
+
+            } catch (error) {
+                addChatMessage('ai', '<div class="result-error"><strong>❌ 执行失败:</strong><br>' + error.message + '</div>', false, true);
+            }
+        }
+
+        function addChatMessage(role, content, isCode = false, isHtml = false) {
+            const messagesEl = document.getElementById('chat-waterfall');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ' + role;
+            
+            const avatar = role === 'user' ? '👤' : '🤖';
+            
+            let bubbleContent;
+            if (isHtml) {
+                bubbleContent = content;
+            } else if (isCode && content.includes('```')) {
+                const codeMatch = content.match(/```(?:sparql)?\s*([\s\S]*?)```/);
+                const description = content.replace(/```(?:sparql)?\s*[\s\S]*?```/, '').trim();
+                
+                if (codeMatch) {
+                    currentAiQuery = codeMatch[1].trim();
+                    bubbleContent = `
+                        ${description ? '<div style="margin-bottom:10px;">' + description + '</div>' : ''}
+                        <pre style="background:#f5f5f5;padding:10px;border-radius:6px;overflow:auto;">${escapeHtml(currentAiQuery)}</pre>
+                    `;
+                } else {
+                    bubbleContent = escapeHtml(content).replace(/\n/g, '<br>');
+                }
+            } else {
+                bubbleContent = escapeHtml(content).replace(/\n/g, '<br>');
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="chat-avatar">${avatar}</div>
+                <div class="chat-bubble">${bubbleContent}</div>
+            `;
+            
+            messagesEl.appendChild(messageDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function addTypingIndicator(id) {
+            const messagesEl = document.getElementById('chat-waterfall');
+            const typingDiv = document.createElement('div');
+            typingDiv.id = id;
+            typingDiv.className = 'chat-message ai';
+            typingDiv.innerHTML = `
+                <div class="chat-avatar">🤖</div>
+                <div class="chat-bubble" style="display:flex;align-items:center;gap:4px;">
+                    <span style="animation:dot1 1s infinite;">●</span>
+                    <span style="animation:dot2 1s infinite;">●</span>
+                    <span style="animation:dot3 1s infinite;">●</span>
+                </div>
+                <style>
+                    @keyframes dot1 { 0%,20% { opacity:0; } 40% { opacity:1; } }
+                    @keyframes dot2 { 0%,40% { opacity:0; } 60% { opacity:1; } }
+                    @keyframes dot3 { 0%,60% { opacity:0; } 80% { opacity:1; } }
+                </style>
+            `;
+            messagesEl.appendChild(typingDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function applyChatQuery() {
+            if (currentAiQuery) {
+                document.getElementById('query-editor').value = currentAiQuery;
+                switchTab('tester');
+                addChatMessage('ai', '✅ 查询已复制到测试工具！现在可以切换到"SPARQL 测试工具"标签执行查询。');
+            }
+        }
+
+        // ==================== 本体管理功能 ====================
+        const defaultOntology = `@prefix ex: <http://example.org/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# 类定义
+ex:Employee a rdfs:Class ;
+    rdfs:label "员工" ;
+    rdfs:comment "公司员工" .
+
+ex:Department a rdfs:Class ;
+    rdfs:label "部门" ;
+    rdfs:comment "公司部门" .
+
+ex:Position a rdfs:Class ;
+    rdfs:label "职位" ;
+    rdfs:comment "公司职位" .
+
+# 属性定义
+ex:first_name a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "名字" .
+
+ex:last_name a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "姓氏" .
+
+ex:email a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:string ;
+    rdfs:label "邮箱" .
+
+ex:salary a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "薪资(月薪)" .
+
+ex:hire_date a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range xsd:date ;
+    rdfs:label "入职日期" .
+
+ex:department_id a rdf:Property ;
+    rdfs:domain ex:Employee ;
+    rdfs:range ex:Department ;
+    rdfs:label "所属部门" .
+
+ex:department_name a rdf:Property ;
+    rdfs:domain ex:Department ;
+    rdfs:range xsd:string ;
+    rdfs:label "部门名称" .
+
+ex:position_title a rdf:Property ;
+    rdfs:domain ex:Position ;
+    rdfs:range xsd:string ;
+    rdfs:label "职位名称" .`;
+
+        function resetOntology() {
+            if (confirm('确定要重置为本体默认定义吗？当前修改将丢失。')) {
+                document.getElementById('ontology-editor').value = defaultOntology;
+                document.getElementById('ontology-status').textContent = '✅ 已重置为默认';
+                setTimeout(() => {
+                    document.getElementById('ontology-status').textContent = '';
+                }, 3000);
+            }
+        }
+
+        function saveOntology() {
+            const content = document.getElementById('ontology-editor').value;
+            ontologyDefinition = content;
+            document.getElementById('ontology-status').textContent = '✅ 保存成功';
+            setTimeout(() => {
+                document.getElementById('ontology-status').textContent = '';
+            }, 3000);
+        }
+
+        // 快捷键
+        document.getElementById('query-editor').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') executeQuery();
+        });
+    </script>
+</body>
+</html>

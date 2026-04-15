@@ -1,0 +1,703 @@
+[
+  {
+    "name": "TestJoinEmployeeDepartment",
+    "description": "基础JOIN：查询员工及其部门",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "lastname",
+        "deptname"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "lastname": "Last1",
+          "deptname": "Department_2"
+        },
+        {
+          "firstname": "First2",
+          "lastname": "Last2",
+          "deptname": "Department_3"
+        },
+        {
+          "firstname": "First3",
+          "lastname": "Last3",
+          "deptname": "Department_4"
+        },
+        {
+          "firstname": "First4",
+          "lastname": "Last4",
+          "deptname": "Department_5"
+        },
+        {
+          "firstname": "First5",
+          "lastname": "Last5",
+          "deptname": "Department_6"
+        },
+        {
+          "firstname": "First6",
+          "lastname": "Last6",
+          "deptname": "Department_7"
+        },
+        {
+          "firstname": "First7",
+          "lastname": "Last7",
+          "deptname": "Department_8"
+        },
+        {
+          "firstname": "First8",
+          "lastname": "Last8",
+          "deptname": "Department_9"
+        },
+        {
+          "firstname": "First9",
+          "lastname": "Last9",
+          "deptname": "Department_10"
+        },
+        {
+          "firstname": "First10",
+          "lastname": "Last10",
+          "deptname": "Department_11"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 118.8809871673584
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "deptName"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "deptName": "Department_2"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "deptName": "Department_3"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "deptName": "Department_4"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "deptName": "Department_5"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "deptName": "Department_6"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "deptName": "Department_7"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "deptName": "Department_8"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "deptName": "Department_9"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "deptName": "Department_10"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "deptName": "Department_11"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 10.374069213867188
+    }
+  },
+  {
+    "name": "TestJoinEmployeePosition",
+    "description": "多表JOIN：员工-部门-职位",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "lastname",
+        "deptname",
+        "positiontitle"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "lastname": "Last1",
+          "deptname": "Department_2",
+          "positiontitle": "Position_2"
+        },
+        {
+          "firstname": "First2",
+          "lastname": "Last2",
+          "deptname": "Department_3",
+          "positiontitle": "Position_3"
+        },
+        {
+          "firstname": "First3",
+          "lastname": "Last3",
+          "deptname": "Department_4",
+          "positiontitle": "Position_4"
+        },
+        {
+          "firstname": "First4",
+          "lastname": "Last4",
+          "deptname": "Department_5",
+          "positiontitle": "Position_5"
+        },
+        {
+          "firstname": "First5",
+          "lastname": "Last5",
+          "deptname": "Department_6",
+          "positiontitle": "Position_6"
+        },
+        {
+          "firstname": "First6",
+          "lastname": "Last6",
+          "deptname": "Department_7",
+          "positiontitle": "Position_7"
+        },
+        {
+          "firstname": "First7",
+          "lastname": "Last7",
+          "deptname": "Department_8",
+          "positiontitle": "Position_8"
+        },
+        {
+          "firstname": "First8",
+          "lastname": "Last8",
+          "deptname": "Department_9",
+          "positiontitle": "Position_9"
+        },
+        {
+          "firstname": "First9",
+          "lastname": "Last9",
+          "deptname": "Department_10",
+          "positiontitle": "Position_10"
+        },
+        {
+          "firstname": "First10",
+          "lastname": "Last10",
+          "deptname": "Department_11",
+          "positiontitle": "Position_11"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 61.84983253479004
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "deptName",
+        "positionTitle"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "deptName": "Department_2",
+          "positionTitle": "Position_2"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "deptName": "Department_3",
+          "positionTitle": "Position_3"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "deptName": "Department_4",
+          "positionTitle": "Position_4"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "deptName": "Department_5",
+          "positionTitle": "Position_5"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "deptName": "Department_6",
+          "positionTitle": "Position_6"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "deptName": "Department_7",
+          "positionTitle": "Position_7"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "deptName": "Department_8",
+          "positionTitle": "Position_8"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "deptName": "Department_9",
+          "positionTitle": "Position_9"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "deptName": "Department_10",
+          "positionTitle": "Position_10"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "deptName": "Department_11",
+          "positionTitle": "Position_11"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 8.901119232177734
+    }
+  },
+  {
+    "name": "TestOptionalEmployeeSalary",
+    "description": "OPTIONAL：查询员工及其薪资（可能不存在）",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "lastname"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "lastname": "Last1"
+        },
+        {
+          "firstname": "First2",
+          "lastname": "Last2"
+        },
+        {
+          "firstname": "First3",
+          "lastname": "Last3"
+        },
+        {
+          "firstname": "First4",
+          "lastname": "Last4"
+        },
+        {
+          "firstname": "First5",
+          "lastname": "Last5"
+        },
+        {
+          "firstname": "First6",
+          "lastname": "Last6"
+        },
+        {
+          "firstname": "First7",
+          "lastname": "Last7"
+        },
+        {
+          "firstname": "First8",
+          "lastname": "Last8"
+        },
+        {
+          "firstname": "First9",
+          "lastname": "Last9"
+        },
+        {
+          "firstname": "First10",
+          "lastname": "Last10"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 56.6248893737793
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "baseSalary"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "baseSalary": 5100.0
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "baseSalary": 5200.0
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "baseSalary": 5300.0
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "baseSalary": 5400.0
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "baseSalary": 5500.0
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "baseSalary": 5600.0
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "baseSalary": 5700.0
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "baseSalary": 5800.0
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "baseSalary": 5900.0
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "baseSalary": 6000.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 110.46028137207031
+    }
+  },
+  {
+    "name": "TestOptionalEmployeeProject",
+    "description": "OPTIONAL多属性：员工及其项目分配",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "lastname"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "lastname": "Last1"
+        },
+        {
+          "firstname": "First2",
+          "lastname": "Last2"
+        },
+        {
+          "firstname": "First3",
+          "lastname": "Last3"
+        },
+        {
+          "firstname": "First4",
+          "lastname": "Last4"
+        },
+        {
+          "firstname": "First5",
+          "lastname": "Last5"
+        },
+        {
+          "firstname": "First6",
+          "lastname": "Last6"
+        },
+        {
+          "firstname": "First7",
+          "lastname": "Last7"
+        },
+        {
+          "firstname": "First8",
+          "lastname": "Last8"
+        },
+        {
+          "firstname": "First9",
+          "lastname": "Last9"
+        },
+        {
+          "firstname": "First10",
+          "lastname": "Last10"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 60.44316291809082
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "projectName",
+        "role"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "projectName": "Project_1",
+          "role": "Manager"
+        },
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "projectName": "Project_2",
+          "role": "Analyst"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "projectName": "Project_3",
+          "role": "Designer"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "projectName": "Project_4",
+          "role": "Tester"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "projectName": "Project_5",
+          "role": "Consultant"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "projectName": "Project_6",
+          "role": "Developer"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "projectName": "Project_7",
+          "role": "Manager"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "projectName": "Project_8",
+          "role": "Analyst"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "projectName": "Project_9",
+          "role": "Designer"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "projectName": "Project_10",
+          "role": "Tester"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 13.844013214111328
+    }
+  },
+  {
+    "name": "TestJoinWithFilter",
+    "description": "JOIN + FILTER：特定部门的员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "lastname",
+        "deptname"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 61.884403228759766
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "deptName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 8.824348449707031
+    }
+  },
+  {
+    "name": "TestNestedOptional",
+    "description": "嵌套OPTIONAL：员工-部门-经理",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "empname",
+        "deptname",
+        "managername"
+      ],
+      "rows": [
+        {
+          "empname": "First1",
+          "deptname": "Department_2",
+          "managername": null
+        },
+        {
+          "empname": "First2",
+          "deptname": "Department_3",
+          "managername": null
+        },
+        {
+          "empname": "First3",
+          "deptname": "Department_4",
+          "managername": null
+        },
+        {
+          "empname": "First4",
+          "deptname": "Department_5",
+          "managername": null
+        },
+        {
+          "empname": "First5",
+          "deptname": "Department_6",
+          "managername": null
+        },
+        {
+          "empname": "First6",
+          "deptname": "Department_7",
+          "managername": null
+        },
+        {
+          "empname": "First7",
+          "deptname": "Department_8",
+          "managername": null
+        },
+        {
+          "empname": "First8",
+          "deptname": "Department_9",
+          "managername": null
+        },
+        {
+          "empname": "First9",
+          "deptname": "Department_10",
+          "managername": null
+        },
+        {
+          "empname": "First10",
+          "deptname": "Department_11",
+          "managername": null
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 63.71140480041504
+    },
+    "sql_result": {
+      "columns": [
+        "empName",
+        "deptName",
+        "managerName"
+      ],
+      "rows": [
+        {
+          "empName": "First1",
+          "deptName": "Department_2",
+          "managerName": "First1"
+        },
+        {
+          "empName": "First2",
+          "deptName": "Department_3",
+          "managerName": "First2"
+        },
+        {
+          "empName": "First3",
+          "deptName": "Department_4",
+          "managerName": "First3"
+        },
+        {
+          "empName": "First4",
+          "deptName": "Department_5",
+          "managerName": "First4"
+        },
+        {
+          "empName": "First5",
+          "deptName": "Department_6",
+          "managerName": "First5"
+        },
+        {
+          "empName": "First6",
+          "deptName": "Department_7",
+          "managerName": "First6"
+        },
+        {
+          "empName": "First7",
+          "deptName": "Department_8",
+          "managerName": "First7"
+        },
+        {
+          "empName": "First8",
+          "deptName": "Department_9",
+          "managerName": "First8"
+        },
+        {
+          "empName": "First9",
+          "deptName": "Department_10",
+          "managerName": "First9"
+        },
+        {
+          "empName": "First10",
+          "deptName": "Department_11",
+          "managerName": "First10"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 9.963750839233398
+    }
+  }
+]

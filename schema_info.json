@@ -1,0 +1,787 @@
+{
+  "employees": {
+    "columns": [
+      {
+        "name": "employee_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "first_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "last_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "email",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "phone",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "hire_date",
+        "type": "date",
+        "nullable": "YES"
+      },
+      {
+        "name": "department_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "position_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "salary",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "status",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "manager_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "bonus",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "emp_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "mgr_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "is_fired",
+        "type": "boolean",
+        "nullable": "YES"
+      },
+      {
+        "name": "is_on_leave",
+        "type": "boolean",
+        "nullable": "YES"
+      },
+      {
+        "name": "is_contractor",
+        "type": "boolean",
+        "nullable": "YES"
+      },
+      {
+        "name": "middle_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "family_relations",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "t0_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "t1_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "t2_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "ssn",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "departments": {
+    "columns": [
+      {
+        "name": "department_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "department_name",
+        "type": "character varying",
+        "nullable": "NO"
+      },
+      {
+        "name": "location",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "manager_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "is_closed",
+        "type": "boolean",
+        "nullable": "YES"
+      },
+      {
+        "name": "dept_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "location_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "positions": {
+    "columns": [
+      {
+        "name": "position_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "position_title",
+        "type": "character varying",
+        "nullable": "NO"
+      },
+      {
+        "name": "position_level",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "min_salary",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "max_salary",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "addresses",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "col_fn",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "person_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "salaries": {
+    "columns": [
+      {
+        "name": "salary_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "employee_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "base_salary",
+        "type": "numeric",
+        "nullable": "NO"
+      },
+      {
+        "name": "bonus",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "deduction",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "net_salary",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "pay_date",
+        "type": "date",
+        "nullable": "NO"
+      },
+      {
+        "name": "pay_period",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "mgr_salary_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "salary",
+        "type": "numeric",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "projects": {
+    "columns": [
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "project_name",
+        "type": "character varying",
+        "nullable": "NO"
+      },
+      {
+        "name": "project_description",
+        "type": "text",
+        "nullable": "YES"
+      },
+      {
+        "name": "start_date",
+        "type": "date",
+        "nullable": "YES"
+      },
+      {
+        "name": "end_date",
+        "type": "date",
+        "nullable": "YES"
+      },
+      {
+        "name": "budget",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "status",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "employee_projects": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "employee_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "project_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "role",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "hours_worked",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "assigned_date",
+        "type": "date",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "social_connections": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "person_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "connection_type",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "department_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "manager_relations": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "emp_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "mgr_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "employee_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "department_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "family_relations": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "person_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "relation_type",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "related_person_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "connected_to",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "parent_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "child_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "persons": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "email",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "person_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "home_address_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "roads": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "road_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "geometry",
+        "type": "USER-DEFINED",
+        "nullable": "YES"
+      },
+      {
+        "name": "length_km",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "road_type",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "road_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "cities": {
+    "columns": [
+      {
+        "name": "city_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "city_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "region_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "geometry",
+        "type": "USER-DEFINED",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "regions": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "region_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "geometry",
+        "type": "USER-DEFINED",
+        "nullable": "YES"
+      },
+      {
+        "name": "area_km2",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "region_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "stores": {
+    "columns": [
+      {
+        "name": "store_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "store_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "geometry",
+        "type": "USER-DEFINED",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "addresses": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "person_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "address",
+        "type": "character varying",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "attendance": {
+    "columns": [
+      {
+        "name": "attendance_id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "employee_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "work_date",
+        "type": "date",
+        "nullable": "NO"
+      },
+      {
+        "name": "check_in",
+        "type": "time without time zone",
+        "nullable": "YES"
+      },
+      {
+        "name": "check_out",
+        "type": "time without time zone",
+        "nullable": "YES"
+      },
+      {
+        "name": "work_hours",
+        "type": "numeric",
+        "nullable": "YES"
+      },
+      {
+        "name": "status",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "overtime_hours",
+        "type": "numeric",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "employee_contacts": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "emp_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "contact_type",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "contact_value",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "is_verified",
+        "type": "boolean",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "locations": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "city",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "location_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "t1_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "t1_location_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "zones": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "zone_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "geometry",
+        "type": "USER-DEFINED",
+        "nullable": "YES"
+      },
+      {
+        "name": "zoning_type",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "zone_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  },
+  "pois": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "integer",
+        "nullable": "NO"
+      },
+      {
+        "name": "poi_name",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "location_id",
+        "type": "integer",
+        "nullable": "YES"
+      },
+      {
+        "name": "geometry",
+        "type": "USER-DEFINED",
+        "nullable": "YES"
+      },
+      {
+        "name": "poi_type",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "category",
+        "type": "character varying",
+        "nullable": "YES"
+      },
+      {
+        "name": "poi_id",
+        "type": "integer",
+        "nullable": "YES"
+      }
+    ]
+  }
+}

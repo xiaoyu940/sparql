@@ -1,0 +1,12 @@
+=== 创建rdf_triples表后 - 121个测试案例结果 ===
+通过: 54
+失败: 22
+总计: 76
+
+改进: 0个
+
+现在通过 (0个):
+
+仍然失败 (2个):
+  ❌ TestDescribeResource
+  ❌ TestDescribeVariable

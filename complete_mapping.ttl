@@ -1,0 +1,272 @@
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix ex: <http://example.org/> .
+@prefix emp: <http://example.org/employee#> .
+@prefix dept: <http://example.org/department#> .
+@prefix pos: <http://example.org/position#> .
+@prefix sal: <http://example.org/salary#> .
+@prefix proj: <http://example.org/project#> .
+@prefix soc: <http://example.org/social#> .
+@prefix man: <http://example.org/manager#> .
+@prefix fam: <http://example.org/family#> .
+@prefix road: <http://example.org/road#> .
+@prefix city: <http://example.org/city#> .
+@prefix reg: <http://example.org/region#> .
+@prefix store: <http://example.org/store#> .
+@prefix addr: <http://example.org/address#> .
+@prefix attend: <http://example.org/attendance#> .
+@prefix contact: <http://example.org/contact#> .
+@prefix loc: <http://example.org/location#> .
+@prefix zone: <http://example.org/zone#> .
+@prefix poi: <http://example.org/poi#> .
+
+<#EmployeesMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "employees" ];
+    rr:subjectMap [
+        rr:template "http://example.org/employee/{employee_id}";
+        rr:class ex:Employee
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:first_name;
+        rr:objectMap [ rr:column "first_name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:last_name;
+        rr:objectMap [ rr:column "last_name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:email;
+        rr:objectMap [ rr:column "email" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:hire_date;
+        rr:objectMap [ rr:column "hire_date" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:salary;
+        rr:objectMap [ rr:column "salary" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:department_id;
+        rr:objectMap [ rr:column "department_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:position_id;
+        rr:objectMap [ rr:column "position_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:manager_id;
+        rr:objectMap [ rr:column "manager_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:name;
+        rr:objectMap [ rr:column "name" ]
+    ].
+
+<#DepartmentsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "departments" ];
+    rr:subjectMap [
+        rr:template "http://example.org/department/{department_id}";
+        rr:class ex:Department
+    ];
+    rr:predicateObjectMap [
+        rr:predicate dept:department_name;
+        rr:objectMap [ rr:column "department_name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate dept:location;
+        rr:objectMap [ rr:column "location" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate dept:budget;
+        rr:objectMap [ rr:column "budget" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate dept:id;
+        rr:objectMap [ rr:column "department_id" ]
+    ].
+
+<#PositionsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "positions" ];
+    rr:subjectMap [
+        rr:template "http://example.org/position/{position_id}";
+        rr:class ex:Position
+    ];
+    rr:predicateObjectMap [
+        rr:predicate pos:position_title;
+        rr:objectMap [ rr:column "position_title" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate pos:department_id;
+        rr:objectMap [ rr:column "department_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate pos:salary_min;
+        rr:objectMap [ rr:column "salary_min" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate pos:salary_max;
+        rr:objectMap [ rr:column "salary_max" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate pos:id;
+        rr:objectMap [ rr:column "position_id" ]
+    ].
+
+<#SalariesMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "salaries" ];
+    rr:subjectMap [
+        rr:template "http://example.org/salary/{salary_id}";
+        rr:class ex:Salary
+    ];
+    rr:predicateObjectMap [
+        rr:predicate sal:employee_id;
+        rr:objectMap [ rr:column "employee_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate sal:amount;
+        rr:objectMap [ rr:column "amount" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate sal:effective_date;
+        rr:objectMap [ rr:column "effective_date" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate sal:department_id;
+        rr:objectMap [ rr:column "department_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate sal:id;
+        rr:objectMap [ rr:column "salary_id" ]
+    ].
+
+<#ProjectsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "projects" ];
+    rr:subjectMap [
+        rr:template "http://example.org/project/{project_id}";
+        rr:class ex:Project
+    ];
+    rr:predicateObjectMap [
+        rr:predicate proj:project_name;
+        rr:objectMap [ rr:column "project_name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate proj:start_date;
+        rr:objectMap [ rr:column "start_date" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate proj:end_date;
+        rr:objectMap [ rr:column "end_date" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate proj:budget;
+        rr:objectMap [ rr:column "budget" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate proj:id;
+        rr:objectMap [ rr:column "project_id" ]
+    ].
+
+<#SocialConnectionsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "social_connections" ];
+    rr:subjectMap [
+        rr:template "http://example.org/social/{connection_id}";
+        rr:class ex:SocialConnection
+    ];
+    rr:predicateObjectMap [
+        rr:predicate soc:person_id;
+        rr:objectMap [ rr:column "person_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate soc:connection_type;
+        rr:objectMap [ rr:column "connection_type" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate soc:connection_date;
+        rr:objectMap [ rr:column "connection_date" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate soc:id;
+        rr:objectMap [ rr:column "connection_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate soc:department_id;
+        rr:objectMap [ rr:column "department_id" ]
+    ].
+
+<#ManagerRelationsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "manager_relations" ];
+    rr:subjectMap [
+        rr:template "http://example.org/manager/{manager_id}_{employee_id}";
+        rr:class ex:ManagerRelation
+    ];
+    rr:predicateObjectMap [
+        rr:predicate man:manager_id;
+        rr:objectMap [ rr:column "manager_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate man:employee_id;
+        rr:objectMap [ rr:column "employee_id" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate man:relation_type;
+        rr:objectMap [ rr:column "relation_type" ]
+    ].
+
+<#PersonsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "persons" ];
+    rr:subjectMap [
+        rr:template "http://example.org/person/{person_id}";
+        rr:class ex:Person
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:name;
+        rr:objectMap [ rr:column "name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:email;
+        rr:objectMap [ rr:column "email" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate emp:hire_date;
+        rr:objectMap [ rr:column "hire_date" ]
+    ].
+
+<#RoadsMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "roads" ];
+    rr:subjectMap [
+        rr:template "http://example.org/road/{id}";
+        rr:class ex:Road
+    ];
+    rr:predicateObjectMap [
+        rr:predicate road:name;
+        rr:objectMap [ rr:column "road_name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate road:length_km;
+        rr:objectMap [ rr:column "length_km" ]
+    ].
+
+<#CitiesMapping>
+    a rr:TriplesMap;
+    rr:logicalTable [ rr:tableName "cities" ];
+    rr:subjectMap [
+        rr:template "http://example.org/city/{city_id}";
+        rr:class ex:City
+    ];
+    rr:predicateObjectMap [
+        rr:predicate city:name;
+        rr:objectMap [ rr:column "city_name" ]
+    ];
+    rr:predicateObjectMap [
+        rr:predicate city:population;
+        rr:objectMap [ rr:column "population" ]
+    ].

@@ -1,0 +1,400 @@
+# SPARQL-SQL 对齐验证测试配置文件
+#
+# 测试套件配置说明：
+# - 定义测试数据库连接信息
+# - 包含所有 SPARQL/SQL 测试案例
+# - 每个案例定义了查询、预期结果和验证规则
+
+name = "SPARQL-SQL Alignment Tests"
+
+[database]
+host = "localhost"
+port = 5432
+user = "yuxiaoyu"
+password = ""  # 从环境变量 PGPASSWORD 加载更安全
+database = "rs_ontop_core"
+timeout_seconds = 30
+
+[[test_cases]]
+id = "TC001"
+name = "Department Employee Count and Average Salary"
+description = "统计每个部门的员工数量和平均薪资，筛选平均薪资超过50000的部门"
+category = "aggregation"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?deptName (COUNT(?emp) AS ?empCount) (AVG(?salary) AS ?avgSalary)
+WHERE {
+  ?emp a ex:Employee ;
+       ex:department_id ?dept ;
+       ex:salary ?salary .
+  ?dept ex:department_name ?deptName .
+}
+GROUP BY ?deptName
+HAVING (AVG(?salary) > 50000)
+ORDER BY DESC(?avgSalary)
+"""
+
+reference_sql = """
+SELECT 
+    d.department_name AS "deptName",
+    COUNT(e.employee_id) AS "empCount",
+    AVG(e.salary) AS "avgSalary"
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+GROUP BY d.department_name
+HAVING AVG(e.salary) > 50000
+ORDER BY "avgSalary" DESC
+"""
+
+[test_cases.validation]
+ignore_columns = []
+sort_before_compare = true
+sort_keys = ["avgSalary"]
+epsilon = 0.01
+row_limit = 100
+
+[[test_cases]]
+id = "TC002"
+name = "Employees with Late Attendance Records"
+description = "查找有迟到记录的员工及其部门信息"
+category = "subquery"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?firstName ?lastName ?deptName ?email
+WHERE {
+  ?emp ex:first_name ?firstName ;
+       ex:last_name ?lastName ;
+       ex:email ?email ;
+       ex:department_id ?dept .
+  ?dept ex:department_name ?deptName .
+  
+  FILTER EXISTS {
+    ?att ex:attendance_employee_id ?emp ;
+         ex:attendance_status "Late" .
+  }
+}
+ORDER BY ?deptName ?lastName
+"""
+
+reference_sql = """
+SELECT 
+    e.first_name AS "firstName",
+    e.last_name AS "lastName",
+    d.department_name AS "deptName",
+    e.email AS "email"
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+WHERE EXISTS (
+    SELECT 1 
+    FROM attendance a 
+    WHERE a.employee_id = e.employee_id 
+    AND a.status = 'Late'
+)
+ORDER BY d.department_name, e.last_name
+"""
+
+[test_cases.validation]
+ignore_columns = []
+sort_before_compare = true
+sort_keys = ["deptName", "lastName"]
+row_limit = 500
+
+[[test_cases]]
+id = "TC003"
+name = "High Earners and Project Managers"
+description = "查找高收入员工或项目经理，包括可选联系方式"
+category = "union"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?empName ?role ?salary ?phone
+WHERE {
+  {
+    ?emp a ex:Employee ;
+         ex:first_name ?first ;
+         ex:last_name ?last ;
+         ex:salary ?salary .
+    FILTER (?salary > 80000)
+    BIND(CONCAT(?first, " ", ?last) AS ?empName)
+    BIND("High Earner" AS ?role)
+  }
+  UNION
+  {
+    ?emp ex:ep_employee_id ?ep ;
+         ex:first_name ?first ;
+         ex:last_name ?last .
+    ?ep ex:role "Manager" .
+    ?emp ex:salary ?salary .
+    BIND(CONCAT(?first, " ", ?last) AS ?empName)
+    BIND("Project Manager" AS ?role)
+  }
+  
+  OPTIONAL { ?emp ex:phone ?phone }
+}
+ORDER BY DESC(?salary)
+"""
+
+reference_sql = """
+SELECT 
+    CONCAT(e.first_name, ' ', e.last_name) AS "empName",
+    CASE 
+        WHEN e.salary > 80000 THEN 'High Earner'
+        ELSE 'Project Manager'
+    END AS "role",
+    e.salary AS "salary",
+    e.phone AS "phone"
+FROM employees e
+LEFT JOIN employee_projects ep ON e.employee_id = ep.employee_id AND ep.role = 'Manager'
+WHERE e.salary > 80000 OR ep.role = 'Manager'
+ORDER BY e.salary DESC
+"""
+
+[test_cases.validation]
+sort_before_compare = true
+sort_keys = ["salary"]
+epsilon = 0.01
+row_limit = 200
+
+[[test_cases]]
+id = "TC004"
+name = "Project Assignment Path"
+description = "查找参与项目的员工及其项目信息"
+category = "property_path"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?empName ?projectName ?role
+WHERE {
+  ?emp ex:first_name ?first ;
+       ex:last_name ?last ;
+       ex:ep_employee_id ?assignment .
+  ?assignment ex:ep_project_id ?project ;
+                ex:role ?role .
+  ?project ex:project_name ?projectName .
+  
+  BIND(CONCAT(?first, " ", ?last) AS ?empName)
+  
+  FILTER (?role != "Consultant")
+}
+ORDER BY ?projectName ?empName
+"""
+
+reference_sql = """
+SELECT 
+    CONCAT(e.first_name, ' ', e.last_name) AS "empName",
+    p.project_name AS "projectName",
+    ep.role AS "role"
+FROM employees e
+JOIN employee_projects ep ON e.employee_id = ep.employee_id
+JOIN projects p ON ep.project_id = p.project_id
+WHERE ep.role != 'Consultant'
+ORDER BY p.project_name, "empName"
+"""
+
+[test_cases.validation]
+sort_before_compare = true
+sort_keys = ["projectName", "empName"]
+row_limit = 300
+
+[[test_cases]]
+id = "TC005"
+name = "Department Project Statistics"
+description = "统计每个部门参与的项目数量、总工时，以及最高工时"
+category = "aggregation"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?deptName 
+       (COUNT(DISTINCT ?project) AS ?projectCount)
+       (SUM(?hours) AS ?totalHours)
+       (MAX(?hours) AS ?maxHours)
+       (AVG(?hours) AS ?avgHours)
+WHERE {
+  ?emp ex:department_id ?dept ;
+       ex:ep_employee_id ?assignment .
+  ?assignment ex:ep_project_id ?project ;
+                ex:hours_worked ?hours .
+  ?dept ex:department_name ?deptName .
+}
+GROUP BY ?deptName
+ORDER BY DESC(?totalHours)
+"""
+
+reference_sql = """
+SELECT 
+    d.department_name AS "deptName",
+    COUNT(DISTINCT ep.project_id) AS "projectCount",
+    SUM(ep.hours_worked) AS "totalHours",
+    MAX(ep.hours_worked) AS "maxHours",
+    AVG(ep.hours_worked) AS "avgHours"
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+JOIN employee_projects ep ON e.employee_id = ep.employee_id
+GROUP BY d.department_name
+ORDER BY "totalHours" DESC
+"""
+
+[test_cases.validation]
+sort_before_compare = true
+sort_keys = ["totalHours"]
+epsilon = 0.1
+row_limit = 100
+
+[[test_cases]]
+id = "TC006"
+name = "Recent Active Employees"
+description = "查找近期入职的在职员工，薪资在特定范围内"
+category = "filter"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?firstName ?lastName ?hireDate ?salary ?deptName
+WHERE {
+  ?emp a ex:Employee ;
+       ex:first_name ?firstName ;
+       ex:last_name ?lastName ;
+       ex:hire_date ?hireDate ;
+       ex:salary ?salary ;
+       ex:status "Active" ;
+       ex:department_id ?dept .
+  ?dept ex:department_name ?deptName .
+  
+  FILTER (?salary >= 40000 && ?salary <= 70000)
+  FILTER (?hireDate >= "2020-01-01"^^xsd:date)
+}
+ORDER BY ?hireDate DESC ?salary DESC
+"""
+
+reference_sql = """
+SELECT 
+    e.first_name AS "firstName",
+    e.last_name AS "lastName",
+    e.hire_date AS "hireDate",
+    e.salary AS "salary",
+    d.department_name AS "deptName"
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+WHERE e.status = 'Active'
+  AND e.salary >= 40000 
+  AND e.salary <= 70000
+  AND e.hire_date >= '2020-01-01'
+ORDER BY e.hire_date DESC, e.salary DESC
+"""
+
+[test_cases.validation]
+sort_before_compare = true
+sort_keys = ["hireDate", "salary"]
+row_limit = 500
+
+[[test_cases]]
+id = "TC007"
+name = "Top Salary by Department"
+description = "查找每个部门薪资最高的员工"
+category = "subquery"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?deptName ?firstName ?lastName ?salary
+WHERE {
+  ?emp a ex:Employee ;
+       ex:first_name ?firstName ;
+       ex:last_name ?lastName ;
+       ex:salary ?salary ;
+       ex:department_id ?dept .
+  ?dept ex:department_name ?deptName .
+  
+  {
+    SELECT ?dept (MAX(?sal) AS ?maxSal)
+    WHERE {
+      ?e a ex:Employee ;
+         ex:salary ?sal ;
+         ex:department_id ?dept .
+    }
+    GROUP BY ?dept
+  }
+  
+  FILTER (?salary >= ?maxSal * 0.95)
+}
+ORDER BY ?deptName DESC(?salary)
+"""
+
+reference_sql = """
+SELECT 
+    d.department_name AS "deptName",
+    e.first_name AS "firstName",
+    e.last_name AS "lastName",
+    e.salary AS "salary"
+FROM employees e
+JOIN departments d ON e.department_id = d.department_id
+WHERE e.salary >= (
+    SELECT MAX(e2.salary) * 0.95
+    FROM employees e2
+    WHERE e2.department_id = e.department_id
+)
+ORDER BY d.department_name, e.salary DESC
+"""
+
+[test_cases.validation]
+sort_before_compare = true
+sort_keys = ["deptName", "salary"]
+row_limit = 50
+
+[[test_cases]]
+id = "TC008"
+name = "Employee Project Assignment with Optional Data"
+description = "查找员工及其项目分配，包括未分配项目的员工"
+category = "optional"
+enabled = true
+
+sparql = """
+PREFIX ex: <http://example.org/>
+
+SELECT ?firstName ?lastName ?projectName ?hoursWorked
+WHERE {
+  ?emp a ex:Employee ;
+       ex:first_name ?firstName ;
+       ex:last_name ?lastName .
+  
+  OPTIONAL {
+    ?emp ex:ep_employee_id ?assignment .
+    ?assignment ex:ep_project_id ?project ;
+                ex:hours_worked ?hoursWorked .
+    ?project ex:project_name ?projectName .
+  }
+}
+ORDER BY ?lastName ?firstName
+"""
+
+reference_sql = """
+SELECT 
+    e.first_name AS "firstName",
+    e.last_name AS "lastName",
+    p.project_name AS "projectName",
+    ep.hours_worked AS "hoursWorked"
+FROM employees e
+LEFT JOIN employee_projects ep ON e.employee_id = ep.employee_id
+LEFT JOIN projects p ON ep.project_id = p.project_id
+ORDER BY e.last_name, e.first_name
+"""
+
+[test_cases.validation]
+sort_before_compare = true
+sort_keys = ["lastName", "firstName"]
+row_limit = 1000

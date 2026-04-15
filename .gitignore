@@ -1,0 +1,9 @@
+/target
+venv/
+tests/python/venv/
+tests/python/test_report_*.json
+__pycache__/
+*.pyc
+.pytest_cache/
+src.zip
+src (2).zip

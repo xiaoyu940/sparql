@@ -1,0 +1,253 @@
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestFilterNumericComparison
+描述: FILTER数值比较：查询高薪员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?salary
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?salary .
+            FILTER(?salary > 80000)
+        }
+        LIMIT 10
+        
+结果: 10 行, 42.70 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", salary
+        FROM employees
+        WHERE salary > 80000
+        LIMIT 10
+        
+结果: 10 行, 6.70 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestFilterStringEquality
+描述: FILTER字符串比较：查询特定邮箱域名的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?email
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:email ?email .
+            FILTER(CONTAINS(?email, "@company.com"))
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.47 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", email
+        FROM employees
+        WHERE email LIKE '%@company.com%'
+        LIMIT 10
+        
+结果: 10 行, 6.71 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestFilterDateRange
+描述: FILTER日期范围：查询最近入职的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT ?firstName ?lastName ?hireDate
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:hire_date ?hireDate .
+            FILTER(?hireDate >= "2024-01-01"^^xsd:date)
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.77 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", hire_date AS "hireDate"
+        FROM employees
+        WHERE hire_date >= '2024-01-01'
+        LIMIT 10
+        
+结果: 10 行, 6.42 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestFilterLogicalAnd
+描述: FILTER逻辑AND：多条件筛选
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?salary ?deptName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?salary ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+            FILTER(?salary > 60000 && ?deptName = "Engineering")
+        }
+        LIMIT 10
+        
+结果: 0 行, 39.95 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               e.salary, d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        WHERE e.salary > 60000 AND d.department_name = 'Engineering'
+        LIMIT 10
+        
+结果: 0 行, 6.88 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestBindCalculation
+描述: BIND计算：计算年薪
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?annualSalary
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?monthlySalary .
+            BIND((?monthlySalary * 12) AS ?annualSalary)
+        }
+        LIMIT 10
+        
+结果: 10 行, 37.54 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName",
+               (salary * 12) AS "annualSalary"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.52 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestBindStringConcat
+描述: BIND字符串：拼接全名
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?fullName ?email
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:email ?email .
+            BIND(CONCAT(?firstName, " ", ?lastName) AS ?fullName)
+        }
+        LIMIT 10
+        
+结果: 10 行, 40.14 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT CONCAT(first_name, ' ', last_name) AS "fullName", email
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.07 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestBindWithFilter
+描述: BIND + FILTER：计算工作年限并筛选
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT ?firstName ?lastName ?yearsOfService
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:hire_date ?hireDate .
+            BIND(YEAR(NOW()) - YEAR(?hireDate) AS ?yearsOfService)
+            FILTER(?yearsOfService > 5)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName",
+               (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM hire_date)) AS "yearsOfService"
+        FROM employees
+        WHERE (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM hire_date)) > 5
+        LIMIT 10
+        
+结果: 10 行, 7.44 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: yearsOfService (tables: ["employees"], column_mapping_keys: ["first_name", "hire_date", "emp", "last_name"], available: [col_first_name:emp.first_name, col_hire_date:emp.hire_date, col_emp:emp.employee_id, col_last_name:emp.last_name])
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 6 ✓
+失败: 1 ✗
+通过率: 85.7%
+
+详细结果已保存至: test_filter_bind_results.json

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS Ontop Core - Auto-Agent</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
+        :root {
+            --primary: #4f46e5;
+            --bg-main: #f8fafc; 
+            --border-color: #e2e8f0;
+        }
+        body { background-color: var(--bg-main); font-family: -apple-system, sans-serif; height: 100vh; overflow: hidden; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .nav-item.active { background-color: #f1f5f9; border-right: 3px solid var(--primary); color: var(--primary); }
+        .nav-item { transition: all 0.2s ease; border-right: 3px solid transparent; color: #64748b; cursor: pointer; }
+        
+        .card { background: #ffffff; border: 1px solid var(--border-color); border-radius: 0.75rem; }
+        .bubble-ai { background: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; }
+        .bubble-user { background: #4f46e5; color: #ffffff; }
+
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .executing-glow { animation: pulse-soft 2s infinite; color: #4f46e5; font-weight: bold; }
+    </style>
+</head>
+<body class="flex">
+
+    <!-- Sidebar Navigation -->
+    <nav class="w-20 bg-white border-r border-slate-200 flex flex-col items-center py-6 gap-8 z-50">
+        <div class="text-indigo-600 text-2xl"><i class="fas fa-cube"></i></div>
+        <div class="flex flex-col gap-2 w-full">
+            <button onclick="switchTab('agent')" id="nav-agent" class="nav-item active flex flex-col items-center gap-1 py-4">
+                <i class="fas fa-robot text-xl"></i>
+                <span class="text-[10px] font-medium">智能体</span>
+            </button>
+            <button onclick="switchTab('sparql')" id="nav-sparql" class="nav-item flex flex-col items-center gap-1 py-4">
+                <i class="fas fa-terminal text-xl"></i>
+                <span class="text-[10px] font-medium">查询器</span>
+            </button>
+            <button onclick="switchTab('knowledge')" id="nav-knowledge" class="nav-item flex flex-col items-center gap-1 py-4">
+                <i class="fas fa-project-diagram text-xl"></i>
+                <span class="text-[10px] font-medium">本体库</span>
+            </button>
+        </div>
+        <button onclick="toggleSettings()" class="mt-auto text-slate-400 hover:text-indigo-600"><i class="fas fa-cog text-xl"></i></button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6">
+            <div class="flex items-center gap-4">
+                <span id="page-title" class="font-bold text-slate-800">智能体工作流</span>
+                <span class="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded border border-indigo-100 font-bold">DeepSeek V3 核心已集成</span>
+                <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">端点: <span class="db-url-display">http://localhost:5820/sparql</span></span>
+            </div>
+            <div class="flex items-center text-[10px] font-bold text-slate-400">
+                STARDOG: <span id="db-status" class="ml-2 text-slate-300 uppercase">Waiting</span>
+            </div>
+        </header>
+
+        <div id="page-container" class="flex-1 overflow-hidden relative">
+            
+            <!-- Agent Page -->
+            <div id="page-agent" class="absolute inset-0 flex flex-col p-6 gap-4">
+                <div class="flex-1 flex flex-col card overflow-hidden shadow-sm">
+                    <div id="agent-chat" class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-6 bg-slate-50/30">
+                        <div class="flex gap-4">
+                            <div class="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                                <i class="fas fa-robot text-xs text-white"></i>
+                            </div>
+                            <div class="bubble-ai p-4 rounded-2xl rounded-tl-none text-sm max-w-2xl border border-slate-200 shadow-sm">
+                                <p class="font-bold text-indigo-600 mb-1">DeepSeek Agent (已授权)</p>
+                                接口已通过 Key 认证。请输入查询指令，我将自动转换为 SPARQL 并尝试调用本地 SPARQL 服务。<br>
+                                <span class="text-[10px] text-slate-400 mt-2 block italic">当前端点: <span class="db-url-display font-mono text-indigo-500">http://localhost:5820/sparql</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Result Panel -->
+                    <div id="result-panel" class="hidden h-80 border-t border-slate-200 bg-white flex flex-col">
+                        <div class="px-4 py-2 bg-slate-50 border-b flex justify-between items-center">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase">数据执行结果 (From SPARQL)</span>
+                            <div class="flex gap-2">
+                                <button onclick="hideResults()" class="text-slate-400 hover:text-red-500"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-auto custom-scrollbar">
+                            <table class="w-full text-[11px] text-left border-collapse">
+                                <thead id="result-head" class="bg-white sticky top-0 border-b border-slate-100"></thead>
+                                <tbody id="result-body" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-slate-200">
+                        <div class="flex gap-3 bg-slate-100 p-2 rounded-xl border border-slate-200">
+                            <input type="text" id="agent-input" onkeypress="if(event.key==='Enter') executeWorkflow()" placeholder="输入自然语言，例如：查询薪资大于50000的员工及其入职日期..." class="flex-1 bg-transparent px-4 py-1 text-sm outline-none">
+                            <button onclick="executeWorkflow()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg font-bold text-xs shadow-sm transition-all active:scale-95">执行任务</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPARQL Editor Page -->
+            <div id="page-sparql" class="absolute inset-0 hidden p-6 flex flex-col gap-4">
+                <div class="flex-1 flex flex-col card overflow-hidden">
+                    <div class="px-4 py-2 bg-slate-50 border-b text-[10px] font-bold text-slate-400 uppercase flex justify-between">
+                        <span>SPARQL 编辑器</span>
+                        <span class="text-indigo-600">目标: <span class="db-url-display">http://localhost:5820/sparql</span></span>
+                    </div>
+                    <textarea id="query-editor" class="flex-1 p-6 code-font text-sm outline-none resize-none" spellcheck="false" placeholder="SELECT * WHERE { ?s ?p ?o } LIMIT 10"></textarea>
+                </div>
+                <button onclick="manualRun()" id="btn-manual" class="bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2">
+                    <i class="fas fa-play"></i> 手动执行查询
+                </button>
+            </div>
+            
+            <!-- Ontology Page -->
+            <div id="page-knowledge" class="absolute inset-0 hidden p-6">
+                <div class="w-full h-full card flex flex-col overflow-hidden">
+                    <div class="px-4 py-2 bg-slate-50 border-b text-[10px] font-bold text-slate-400 uppercase flex justify-between">
+                        <span>本体定义 (Turtle)</span>
+                        <button onclick="resetOntology()" class="text-indigo-600 hover:underline">重置为默认</button>
+                    </div>
+                    <textarea id="ontology-editor" class="flex-1 p-8 code-font text-xs text-slate-600 outline-none resize-none bg-slate-50/20" spellcheck="false"></textarea>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div class="bg-white w-[400px] rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-indigo-600 p-4 text-white font-bold text-sm flex justify-between">
+                <span>SPARQL 端点配置</span>
+                <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded">rs_ontop_core 服务</span>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-[10px] text-slate-400 font-bold mb-2 uppercase">SPARQL Endpoint URL</label>
+                    <input type="text" id="db-url" value="http://localhost:5820/sparql" class="w-full border rounded-lg px-4 py-2 text-xs font-mono outline-none focus:ring-2 ring-indigo-500/20">
+                    <p class="text-[9px] text-slate-400 mt-1 italic">项目 SPARQL 服务地址 (默认: http://localhost:5820/sparql)</p>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p class="text-[10px] text-amber-700">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        当前服务无需认证。如需修改端点，请直接编辑上方 URL。
+                    </p>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 flex justify-end">
+                <button onclick="saveAndCloseSettings()" class="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold text-xs">确认并保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Key 已硬编码
+        const DEEPSEEK_API_KEY = "sk-ca4949cc8bd54640b768e49cedbeb14f";
+
+        // 本体定义
+        const defaultOntology = `@prefix ex: <http://example.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:Employee a rdfs:Class ; rdfs:label "员工" .
+ex:Department a rdfs:Class ; rdfs:label "部门" .
+
+ex:name a rdf:Property ; 
+    rdfs:domain ex:Employee ; 
+    rdfs:range xsd:string ; 
+    rdfs:label "姓名" .
+
+ex:salary a rdf:Property ; 
+    rdfs:domain ex:Employee ; 
+    rdfs:range xsd:integer ; 
+    rdfs:label "薪资(月薪)" .
+
+ex:hire_date a rdf:Property ; 
+    rdfs:domain ex:Employee ; 
+    rdfs:range xsd:date ; 
+    rdfs:label "入职日期" .
+
+ex:department_name a rdf:Property ; 
+    rdfs:domain ex:Department ; 
+    rdfs:label "部门名称" .
+
+ex:belongs_to a rdf:Property ; 
+    rdfs:domain ex:Employee ; 
+    rdfs:range ex:Department ; 
+    rdfs:label "所属部门" .`;
+
+        window.onload = () => {
+            document.getElementById('ontology-editor').value = defaultOntology;
+            updateDisplayUrls();
+        };
+
+        function resetOntology() {
+            if(confirm("确定要恢复默认本体吗？")) {
+                document.getElementById('ontology-editor').value = defaultOntology;
+            }
+        }
+
+        function updateDisplayUrls() {
+            const url = document.getElementById('db-url').value;
+            document.querySelectorAll('.db-url-display').forEach(el => el.innerText = url);
+        }
+
+        window.switchTab = (id) => {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`nav-${id}`).classList.add('active');
+            document.querySelectorAll('#page-container > div').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`page-${id}`).classList.remove('hidden');
+            
+            if(id === 'sparql' && !document.getElementById('query-editor').value) {
+                document.getElementById('query-editor').value = "SELECT * WHERE {\n  ?s ?p ?o\n} LIMIT 10";
+            }
+        };
+
+        window.toggleSettings = () => document.getElementById('settings-panel').classList.toggle('hidden');
+        window.hideResults = () => document.getElementById('result-panel').classList.add('hidden');
+        
+        function saveAndCloseSettings() {
+            updateDisplayUrls();
+            toggleSettings();
+        }
+
+        async function manualRun() {
+            const sparql = document.getElementById('query-editor').value.trim();
+            if (!sparql) return alert("请输入 SPARQL 语句");
+            
+            const btn = document.getElementById('btn-manual');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner animate-spin"></i> 正在查询...';
+            btn.disabled = true;
+
+            await runSparql(sparql, null, true);
+            
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        }
+
+        async function executeWorkflow() {
+            const input = document.getElementById('agent-input');
+            const queryText = input.value.trim();
+            if(!queryText) return;
+
+            addMsg('user', queryText);
+            input.value = '';
+            const aiBubble = addMsg('ai', '<i class="fas fa-circle-notch animate-spin"></i> 正在调用 DeepSeek 进行语义转换...');
+
+            try {
+                const sparql = await getSparqlFromDeepSeek(queryText, aiBubble);
+                if (!sparql) return;
+                
+                renderAIText(aiBubble, `已理解您的需求。生成的查询代码如下：\n\n\`\`\`sparql\n${sparql}\n\`\`\``);
+                
+                const statusTag = document.createElement('div');
+                statusTag.className = "executing-glow mt-4 text-[10px] border-t border-slate-100 pt-3 flex items-center gap-2";
+                statusTag.innerHTML = '<i class="fas fa-database text-indigo-400"></i> SPARQL 服务查询中...';
+                aiBubble.appendChild(statusTag);
+
+                document.getElementById('query-editor').value = sparql;
+                await runSparql(sparql, statusTag, false);
+
+            } catch (err) {
+                aiBubble.innerHTML = `<span class="text-red-500 font-bold">工作流中断:</span> ${err.message}`;
+            }
+        }
+
+        async function getSparqlFromDeepSeek(text, bubble) {
+            const ontologyContext = document.getElementById('ontology-editor').value;
+            const systemPrompt = `你是一个精准的自然语言转 SPARQL 的智能体。
+当前本体上下文如下（Turtle 格式）：
+${ontologyContext}
+
+请将用户的问题转换为标准 SPARQL。
+要求：
+1. 包含完整的 Prefix 定义。
+2. 尽量使用本体中定义的 Property。
+3. 只返回代码块包裹的 SPARQL 语句。`;
+
+            try {
+                const response = await fetch('https://api.deepseek.com/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: "deepseek-chat",
+                        messages: [
+                            { role: "system", content: systemPrompt },
+                            { role: "user", content: text }
+                        ],
+                        temperature: 0.1
+                    })
+                });
+
+                if (!response.ok) throw new Error(`DeepSeek API 错误 (Status: ${response.status})`);
+
+                const data = await response.json();
+                const content = data.choices[0].message.content;
+                const match = content.match(/```sparql([\s\S]*?)```/) || content.match(/```([\s\S]*?)```/);
+                
+                return match ? match[1].trim() : content.trim();
+
+            } catch (err) {
+                bubble.innerHTML = `<span class="text-red-500 font-bold">AI 解析失败:</span><br>${err.message}`;
+                return null;
+            }
+        }
+
+        /**
+         * 运行 SPARQL 查询 - 支持多种方式
+         */
+        async function runSparql(sparql, statusLabel, isManual = false) {
+            const baseUrl = document.getElementById('db-url').value.trim();
+
+            if (statusLabel) {
+                statusLabel.innerHTML = '<i class="fas fa-circle-notch animate-spin"></i> 连接 SPARQL 服务...';
+            }
+
+            // 尝试多种请求方式
+            const methods = [
+                {
+                    name: 'GET',
+                    fn: async () => {
+                        const queryUrl = new URL(baseUrl);
+                        queryUrl.searchParams.append('query', sparql);
+                        return fetch(queryUrl.toString(), {
+                            method: 'GET',
+                            headers: {
+                                'Accept': 'application/sparql-results+json'
+                            },
+                            mode: 'cors'
+                        });
+                    }
+                },
+                {
+                    name: 'POST-urlencoded',
+                    fn: async () => {
+                        return fetch(baseUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Accept': 'application/sparql-results+json'
+                            },
+                            body: 'query=' + encodeURIComponent(sparql),
+                            mode: 'cors'
+                        });
+                    }
+                },
+                {
+                    name: 'POST-direct',
+                    fn: async () => {
+                        return fetch(baseUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/sparql-query',
+                                'Accept': 'application/sparql-results+json'
+                            },
+                            body: sparql,
+                            mode: 'cors'
+                        });
+                    }
+                }
+            ];
+
+            let lastError = null;
+            
+            for (const method of methods) {
+                try {
+                    console.log(`[SPARQL] 尝试 ${method.name}...`);
+                    const response = await method.fn();
+                    
+                    if (response.status === 404) {
+                        throw new Error("端点不存在 (404)，请检查 URL");
+                    }
+                    if (response.status === 0) {
+                        throw new Error("CORS 阻止 - 请使用 HTTP 服务器访问此页面");
+                    }
+                    
+                    if (!response.ok) {
+                        const text = await response.text().catch(() => '');
+                        throw new Error(`HTTP ${response.status}: ${text.substring(0, 100)}`);
+                    }
+
+                    const data = await response.json();
+                    const bindings = data.results?.bindings || [];
+                    
+                    console.log(`[SPARQL] ${method.name} 成功，返回 ${bindings.length} 条`);
+                    
+                    if (statusLabel) {
+                        statusLabel.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fas fa-check-circle"></i> [${method.name}] 成功：${bindings.length} 条数据</span>`;
+                    }
+                    
+                    showTable(data);
+                    updateDbStatus('CONNECTED', 'text-emerald-500');
+                    
+                    if (isManual) switchTab('agent');
+                    return; // 成功退出
+
+                } catch (err) {
+                    console.warn(`[SPARQL] ${method.name} 失败:`, err.message);
+                    lastError = err;
+                    // 继续尝试下一个方法
+                }
+            }
+
+            // 所有方法都失败
+            const errMsg = `<span class="text-red-500 font-bold"><i class="fas fa-exclamation-triangle"></i> 查询失败:</span> ${lastError?.message || '未知错误'}`;
+            if (statusLabel) statusLabel.innerHTML = errMsg;
+            else if (isManual) alert('查询失败: ' + lastError?.message);
+            
+            updateDbStatus('ERROR', 'text-red-400');
+        }
+
+        function updateDbStatus(text, colorClass) {
+            const el = document.getElementById('db-status');
+            el.className = 'ml-2 ' + colorClass;
+            el.innerText = text;
+        }
+
+        function showTable(data) {
+            const head = document.getElementById('result-head');
+            const body = document.getElementById('result-body');
+            const vars = data.head.vars || [];
+            const bindings = data.results.bindings || [];
+
+            if (vars.length === 0) {
+                head.innerHTML = "<tr><th class='p-4 text-slate-400 text-center uppercase text-[10px]'>无可用变量</th></tr>";
+                body.innerHTML = "";
+            } else {
+                head.innerHTML = `<tr>${vars.map(v => `<th class="px-4 py-3 bg-slate-50 text-slate-500 uppercase font-bold text-[10px] border-b border-slate-200">${v}</th>`).join('')}</tr>`;
+                body.innerHTML = bindings.length > 0 ? bindings.map(row => `
+                    <tr class="hover:bg-indigo-50/40 transition-colors">
+                        ${vars.map(v => {
+                            const val = row[v]?.value || '-';
+                            const isUri = row[v]?.type === 'uri';
+                            const display = val.length > 50 ? val.substring(0, 25) + '...' + val.substring(val.length-20) : val;
+                            return `<td class="px-4 py-2.5 text-slate-700 border-b border-slate-50 truncate max-w-xs ${isUri?'text-indigo-400 text-[10px]':''}" title="${val}">${display}</td>`;
+                        }).join('')}
+                    </tr>
+                `).join('') : `<tr><td colspan="${vars.length}" class="p-12 text-center text-slate-400 italic">暂无匹配的数据记录</td></tr>`;
+            }
+            
+            document.getElementById('result-panel').classList.remove('hidden');
+            document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderAIText(container, text) {
+            const safeText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, '<br>');
+            container.innerHTML = safeText.replace(/```sparql([\s\S]*?)```/g, (m, code) => {
+                return `<div class="mt-3 bg-slate-900 text-indigo-300 p-4 rounded-xl font-mono text-[11px] whitespace-pre-wrap border-l-4 border-indigo-500 overflow-x-auto">${code.replace(/<br>/g, '\n').trim()}</div>`;
+            });
+        }
+
+        function addMsg(role, content) {
+            const chat = document.getElementById('agent-chat');
+            const div = document.createElement('div');
+            div.className = `flex gap-4 ${role==='user'?'flex-row-reverse':''}`;
+            div.innerHTML = `
+                <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${role==='user'?'bg-indigo-50 border border-indigo-200 shadow-sm':'bg-indigo-600 shadow-md'}">
+                    <i class="fas fa-${role==='user'?'user text-indigo-400':'robot text-white'} text-xs"></i>
+                </div>
+                <div class="${role==='user'?'bubble-user shadow-md':'bubble-ai border border-slate-200 shadow-sm'} p-4 rounded-2xl text-sm max-w-[85%]">${content}</div>
+            `;
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+            return div.querySelector('.bubble-ai, .bubble-user');
+        }
+    </script>
+</body>
+</html>

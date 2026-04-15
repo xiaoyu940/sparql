@@ -1,0 +1,690 @@
+[
+  {
+    "name": "TestNowFunction",
+    "description": "当前时间函数 NOW()",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "currenttime"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "currenttime": "2026-04-09T16:28:20.732720+08:00"
+        },
+        {
+          "firstname": "First2",
+          "currenttime": "2026-04-09T16:28:20.732720+08:00"
+        },
+        {
+          "firstname": "First3",
+          "currenttime": "2026-04-09T16:28:20.732720+08:00"
+        },
+        {
+          "firstname": "First4",
+          "currenttime": "2026-04-09T16:28:20.732720+08:00"
+        },
+        {
+          "firstname": "First5",
+          "currenttime": "2026-04-09T16:28:20.732720+08:00"
+        }
+      ],
+      "row_count": 5,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 61.531782150268555
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "currentTime"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "currentTime": "2026-04-09T16:28:20.790184+08:00"
+        },
+        {
+          "firstName": "First2",
+          "currentTime": "2026-04-09T16:28:20.790184+08:00"
+        },
+        {
+          "firstName": "First3",
+          "currentTime": "2026-04-09T16:28:20.790184+08:00"
+        },
+        {
+          "firstName": "First4",
+          "currentTime": "2026-04-09T16:28:20.790184+08:00"
+        },
+        {
+          "firstName": "First5",
+          "currentTime": "2026-04-09T16:28:20.790184+08:00"
+        }
+      ],
+      "row_count": 5,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 9.34743881225586
+    }
+  },
+  {
+    "name": "TestYearFunction",
+    "description": "年份提取 YEAR()",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "hireyear"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First2",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First3",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First4",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First5",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First6",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First7",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First8",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First9",
+          "hireyear": 2026.0
+        },
+        {
+          "firstname": "First10",
+          "hireyear": 2026.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 54.80027198791504
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "hireYear"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First2",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First3",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First4",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First5",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First6",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First7",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First8",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First9",
+          "hireYear": 2026.0
+        },
+        {
+          "firstName": "First10",
+          "hireYear": 2026.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 8.070707321166992
+    }
+  },
+  {
+    "name": "TestMonthFunction",
+    "description": "月份提取 MONTH()",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "hiremonth"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "hiremonth": 4.0
+        },
+        {
+          "firstname": "First2",
+          "hiremonth": 4.0
+        },
+        {
+          "firstname": "First3",
+          "hiremonth": 4.0
+        },
+        {
+          "firstname": "First4",
+          "hiremonth": 4.0
+        },
+        {
+          "firstname": "First5",
+          "hiremonth": 4.0
+        },
+        {
+          "firstname": "First6",
+          "hiremonth": 4.0
+        },
+        {
+          "firstname": "First7",
+          "hiremonth": 3.0
+        },
+        {
+          "firstname": "First8",
+          "hiremonth": 3.0
+        },
+        {
+          "firstname": "First9",
+          "hiremonth": 3.0
+        },
+        {
+          "firstname": "First10",
+          "hiremonth": 3.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 55.55534362792969
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "hireMonth"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "hireMonth": 4.0
+        },
+        {
+          "firstName": "First2",
+          "hireMonth": 4.0
+        },
+        {
+          "firstName": "First3",
+          "hireMonth": 4.0
+        },
+        {
+          "firstName": "First4",
+          "hireMonth": 4.0
+        },
+        {
+          "firstName": "First5",
+          "hireMonth": 4.0
+        },
+        {
+          "firstName": "First6",
+          "hireMonth": 4.0
+        },
+        {
+          "firstName": "First7",
+          "hireMonth": 3.0
+        },
+        {
+          "firstName": "First8",
+          "hireMonth": 3.0
+        },
+        {
+          "firstName": "First9",
+          "hireMonth": 3.0
+        },
+        {
+          "firstName": "First10",
+          "hireMonth": 3.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 8.756399154663086
+    }
+  },
+  {
+    "name": "TestDayFunction",
+    "description": "日期提取 DAY()",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "hireday"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "hireday": 6.0
+        },
+        {
+          "firstname": "First2",
+          "hireday": 5.0
+        },
+        {
+          "firstname": "First3",
+          "hireday": 4.0
+        },
+        {
+          "firstname": "First4",
+          "hireday": 3.0
+        },
+        {
+          "firstname": "First5",
+          "hireday": 2.0
+        },
+        {
+          "firstname": "First6",
+          "hireday": 1.0
+        },
+        {
+          "firstname": "First7",
+          "hireday": 31.0
+        },
+        {
+          "firstname": "First8",
+          "hireday": 30.0
+        },
+        {
+          "firstname": "First9",
+          "hireday": 29.0
+        },
+        {
+          "firstname": "First10",
+          "hireday": 28.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 56.79941177368164
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "hireDay"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "hireDay": 6.0
+        },
+        {
+          "firstName": "First2",
+          "hireDay": 5.0
+        },
+        {
+          "firstName": "First3",
+          "hireDay": 4.0
+        },
+        {
+          "firstName": "First4",
+          "hireDay": 3.0
+        },
+        {
+          "firstName": "First5",
+          "hireDay": 2.0
+        },
+        {
+          "firstName": "First6",
+          "hireDay": 1.0
+        },
+        {
+          "firstName": "First7",
+          "hireDay": 31.0
+        },
+        {
+          "firstName": "First8",
+          "hireDay": 30.0
+        },
+        {
+          "firstName": "First9",
+          "hireDay": 29.0
+        },
+        {
+          "firstName": "First10",
+          "hireDay": 28.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 8.871078491210938
+    }
+  },
+  {
+    "name": "TestHoursFunction",
+    "description": "小时提取 HOURS()",
+    "passed": false,
+    "errors": [
+      "SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: checkIn (tables: [\"(SELECT 1)\"], column_mapping_keys: [], available: [])"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: checkIn (tables: [\"(SELECT 1)\"], column_mapping_keys: [], available: [])",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "checkInHour"
+      ],
+      "rows": [
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 9.0
+        },
+        {
+          "firstName": "First69724",
+          "checkInHour": 8.0
+        },
+        {
+          "firstName": "First69725",
+          "checkInHour": 8.0
+        },
+        {
+          "firstName": "First69725",
+          "checkInHour": 8.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 11.501312255859375
+    }
+  },
+  {
+    "name": "TestDateDiff",
+    "description": "日期差计算 - 计算工龄",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "yearsofservice"
+      ],
+      "rows": [
+        {
+          "firstname": "First1",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First2",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First3",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First4",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First5",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First6",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First7",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First8",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First9",
+          "yearsofservice": 0.0
+        },
+        {
+          "firstname": "First10",
+          "yearsofservice": 0.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 53.223371505737305
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "yearsOfService"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First2",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First3",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First4",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First5",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First6",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First7",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First8",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First9",
+          "yearsOfService": 0.0
+        },
+        {
+          "firstName": "First10",
+          "yearsOfService": 0.0
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 9.594440460205078
+    }
+  },
+  {
+    "name": "TestDateComparison",
+    "description": "日期比较 - 查询2020年前入职的员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstname",
+        "hiredate"
+      ],
+      "rows": [
+        {
+          "firstname": "First2289",
+          "hiredate": "2019-12-31"
+        },
+        {
+          "firstname": "First2290",
+          "hiredate": "2019-12-30"
+        },
+        {
+          "firstname": "First2291",
+          "hiredate": "2019-12-29"
+        },
+        {
+          "firstname": "First2292",
+          "hiredate": "2019-12-28"
+        },
+        {
+          "firstname": "First2293",
+          "hiredate": "2019-12-27"
+        },
+        {
+          "firstname": "First2294",
+          "hiredate": "2019-12-26"
+        },
+        {
+          "firstname": "First2295",
+          "hiredate": "2019-12-25"
+        },
+        {
+          "firstname": "First2296",
+          "hiredate": "2019-12-24"
+        },
+        {
+          "firstname": "First2297",
+          "hiredate": "2019-12-23"
+        },
+        {
+          "firstname": "First2298",
+          "hiredate": "2019-12-22"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 56.984663009643555
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "hireDate"
+      ],
+      "rows": [
+        {
+          "firstName": "First2289",
+          "hireDate": "2019-12-31"
+        },
+        {
+          "firstName": "First2290",
+          "hireDate": "2019-12-30"
+        },
+        {
+          "firstName": "First2291",
+          "hireDate": "2019-12-29"
+        },
+        {
+          "firstName": "First2292",
+          "hireDate": "2019-12-28"
+        },
+        {
+          "firstName": "First2293",
+          "hireDate": "2019-12-27"
+        },
+        {
+          "firstName": "First2294",
+          "hireDate": "2019-12-26"
+        },
+        {
+          "firstName": "First2295",
+          "hireDate": "2019-12-25"
+        },
+        {
+          "firstName": "First2296",
+          "hireDate": "2019-12-24"
+        },
+        {
+          "firstName": "First2297",
+          "hireDate": "2019-12-23"
+        },
+        {
+          "firstName": "First2298",
+          "hireDate": "2019-12-22"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 8.950471878051758
+    }
+  }
+]

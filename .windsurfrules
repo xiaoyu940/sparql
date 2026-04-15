@@ -1,0 +1,45 @@
+# RS Ontop Core: Governance Rules v3.0
+
+## 1. [ACTION] 执行前置要求 (Pre-Action Triggers)
+- **强制指令**：在生成任何代码之前，你 **必须** 执行 `cat /doc/architecture.md`、`cat /doc/rust_standard.md` 以及 `cat /doc/WORKSPACE_GUIDE.md`。
+- **关联逻辑**：将你的实现与上述文档中识别出的模式和规范进行对齐。
+
+## 2. [RUST] 高级工程与核心设计 (High-Level Engineering)
+- **多态设计**：使用基于 Trait 的多态性将 SQL 生成与 SPARQL 解析逻辑解耦。
+- **类型驱动开发 (Type-Driven Design)**：
+    - 优先使用 **Newtype** 模式（如 `struct MappingId(String)`）防止参数混淆。
+- **内存安全**：严禁使用 `unsafe`，除非在 pgrx 的 FFI 边界且必须附带 `// SAFETY:` 注释。
+- **零拷贝 (Zero-copy)**：优先使用 `Cow<'a, str>` 或 `&[u8]` 处理解析逻辑，避免无意义的 `.to_string()`。
+- **分层解耦**：所有的数据库操作必须封装在 `Repository` Trait 下，以便进行单元测试 (Mocking)。
+- **硬编码**：禁止代码中写死变量值导致代码过度拟合的现象
+
+## 3. [PGRX] PostgreSQL 扩展专项规范
+- **所有权管理**：所有 SPI 交互必须使用 `pgrx::prelude::Spi`。
+- **内存感知 (Context Awareness)**：`pgrx` 的内存受 Postgres MemoryContext 控制。大量分配内存时需考虑 `PgMemoryContexts`。
+- **FFI 安全**：跨越 `#[pg_extern]` 边界时，确保所有数据类型都符合 `FromDatum` / `IntoDatum` 特性。
+- **SPI 操作规范**：
+    - **流式处理**：查询结果必须使用 `Spi::cursor()` 配合 `Portal`，禁止全量加载大数据量。
+    - **事务安全**：所有 SPI 调用必须在 `Spi::connect` 闭包内或受 `#[pg_guard]` 保护。
+
+## 4. [ANTI-SIMPLIFICATION] 反代码简化协议
+- **禁止降级**：严禁将已定义的 Trait 抽象、泛型约束或策略模式 (Strategy Pattern) 改回硬编码的 `if-else` 或 `match` 块。
+- **复杂度对等**：如果当前方案无法实现，必须先解释技术难点（如 Borrow Checker 限制），并提出两个以上的架构级替代方案，严禁直接输出“简化版”代码。
+- **存量代码保护**：除非明确要求，否则不得删除已有的错误处理逻辑 (Result mapping) 和日志记录 (tracing)。
+- **签名一致性**：严禁为了避开生命周期检查而修改已确定的接口签名（如将 `&str` 改为 `String` 以逃避借用检查）。
+- **失败反馈循环**：如果 `cargo check` 失败，必须通过完善“类型定义”或“生命周期标注”来解决，禁止通过“展平逻辑”或“克隆数据”来妥协。
+- **逻辑深度**：针对嵌套子查询等复杂逻辑，必须保持 **递归下降 (Recursive Descent)** 的结构。
+- **禁止硬编码**：严谨把具体数据写入代码达到通过测试的目的，逻辑没有问题应该通过调整配置数据来通过测试。
+## 5. [WORKSPACE] 目录与工程治理
+- **目录规范**：严格遵守 `/doc/architecture/WORKSPACE_GUIDE.md` 中的层级定义：
+- **模块注册**：创建新 `.rs` 文件后，必须立即在对应的 `mod.rs` 中声明，禁止产生孤儿文件。
+- **文档同步**：代码改动涉及架构变更，必须提示并建议同步更新 `/doc/` 下的相关文档。
+
+## 6. [STYLE] 代码风格与约束
+- **错误传播**：使用 `thiserror` 定义结构化错误，使用 `anyhow` 处理顶层应用逻辑。
+- **禁止项**：严禁使用 `unwrap()`、`expect()`、`panic!()`。确保 0% 出现。
+- **代码重构 (Anti-Junior)**：
+    - 使用 **策略模式 (Strategy Pattern)** 替换重复的 `if-else` 块。
+    - 优先使用 **Iterator 算子** (map, filter, fold) 而非显式 `for` 循环。
+    - 每个 Public 函数必须包含 `# Errors` 的 Doc Comment。
+
+---

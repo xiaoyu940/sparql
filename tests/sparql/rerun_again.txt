@@ -1,0 +1,2481 @@
+
+================================================================================
+SPARQL HTTP 综合测试套件
+================================================================================
+开始时间: 2026-04-09 15:23:55
+SPARQL Endpoint: http://localhost:5280/sparql
+SQL Database: localhost:5432/rs_ontop_core
+================================================================================
+
+
+================================================================================
+测试套件: 基础 SELECT 查询
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestBasicSelectAllEmployees
+描述: 基础查询：获取所有员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?emp ?firstName ?lastName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 96.29 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT employee_id AS emp, first_name AS "firstName", last_name AS "lastName"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 8.25 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestSelectSpecificColumns
+描述: 查询特定属性：员工姓名和邮箱
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?email
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:email ?email .
+        }
+        LIMIT 5
+        
+结果: 5 行, 42.71 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", email
+        FROM employees
+        LIMIT 5
+        
+结果: 5 行, 7.41 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestSelectWithOrderBy
+描述: 排序查询：按入职日期排序
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?hireDate
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:hire_date ?hireDate .
+        }
+        ORDER BY DESC(?hireDate)
+        LIMIT 10
+        
+结果: 10 行, 83.57 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", hire_date AS "hireDate"
+        FROM employees
+        ORDER BY hire_date DESC
+        LIMIT 10
+        
+结果: 10 行, 40.00 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestSelectDistinctDepartments
+描述: 去重查询：获取所有不重复的部门
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT DISTINCT ?deptName
+        WHERE {
+            ?dept ex:department_name ?deptName .
+        }
+        ORDER BY ?deptName
+        LIMIT 20
+        
+结果: 20 行, 49.17 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT DISTINCT department_name AS "deptName"
+        FROM departments
+        ORDER BY department_name
+        LIMIT 20
+        
+结果: 20 行, 6.00 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestSelectCountEmployees
+描述: 计数查询：统计员工总数
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT (COUNT(?emp) AS ?totalEmployees)
+        WHERE {
+            ?emp ex:first_name ?fn .
+        }
+        
+结果: 1 行, 47.75 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT COUNT(*) AS "totalEmployees"
+        FROM employees
+        
+结果: 1 行, 11.48 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestAskEmployeeExists
+描述: ASK查询：检查是否存在员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        ASK {
+            ?emp ex:first_name ?fn .
+        }
+        
+结果: 1 行, 38.37 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT EXISTS(SELECT 1 FROM employees) AS result
+        
+结果: 1 行, 6.61 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试汇总
+================================================================================
+总计: 6 个测试
+通过: 6 ✓
+失败: 0 ✗
+通过率: 100.0%
+
+基础 SELECT 查询: 6/6 通过
+
+
+================================================================================
+测试套件: JOIN 和 OPTIONAL
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestJoinEmployeeDepartment
+描述: 基础JOIN：查询员工及其部门
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?deptName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 37.56 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName", 
+               d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        LIMIT 10
+        
+结果: 10 行, 6.30 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestJoinEmployeePosition
+描述: 多表JOIN：员工-部门-职位
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?deptName ?positionTitle
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:department_id ?dept ;
+                 ex:position_id ?pos .
+            ?dept ex:department_name ?deptName .
+            ?pos ex:position_title ?positionTitle .
+        }
+        LIMIT 10
+        
+结果: 10 行, 40.91 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               d.department_name AS "deptName", p.position_title AS "positionTitle"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        JOIN positions p ON e.position_id = p.position_id
+        LIMIT 10
+        
+结果: 10 行, 11.86 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestOptionalEmployeeSalary
+描述: OPTIONAL：查询员工及其薪资（可能不存在）
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?baseSalary
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            OPTIONAL {
+                ?emp ex:salary_record ?sal .
+                ?sal ex:base_salary ?baseSalary .
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 43.30 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               s.base_salary AS "baseSalary"
+        FROM employees e
+        LEFT JOIN salaries s ON e.employee_id = s.employee_id
+        LIMIT 10
+        
+结果: 10 行, 30.58 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - Row count mismatch: SPARQL=0, SQL=10
+
+================================================================================
+测试: TestOptionalEmployeeProject
+描述: OPTIONAL多属性：员工及其项目分配
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?projectName ?role
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            OPTIONAL {
+                ?emp ex:assigned_to ?assignment .
+                ?assignment ex:project ?proj ;
+                          ex:role ?role .
+                ?proj ex:project_name ?projectName .
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 37.98 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               p.project_name AS "projectName", ep.role
+        FROM employees e
+        LEFT JOIN employee_projects ep ON e.employee_id = ep.employee_id
+        LEFT JOIN projects p ON ep.project_id = p.project_id
+        LIMIT 10
+        
+结果: 10 行, 8.15 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - Row count mismatch: SPARQL=0, SQL=10
+
+================================================================================
+测试: TestJoinWithFilter
+描述: JOIN + FILTER：特定部门的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?deptName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+            FILTER(?deptName = "Engineering")
+        }
+        LIMIT 10
+        
+结果: 0 行, 37.62 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        WHERE d.department_name = 'Engineering'
+        LIMIT 10
+        
+结果: 0 行, 6.81 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestNestedOptional
+描述: 嵌套OPTIONAL：员工-部门-经理
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?empName ?deptName ?managerName
+        WHERE {
+            ?emp ex:first_name ?empName ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+            OPTIONAL {
+                ?dept ex:manager ?mgr .
+                ?mgr ex:first_name ?managerName .
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 40.22 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "empName", d.department_name AS "deptName",
+               m.first_name AS "managerName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        LEFT JOIN employees m ON d.manager_id = m.employee_id
+        LIMIT 10
+        
+结果: 10 行, 6.86 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - Row count mismatch: SPARQL=0, SQL=10
+
+================================================================================
+测试汇总
+================================================================================
+总计: 6 个测试
+通过: 3 ✓
+失败: 3 ✗
+通过率: 50.0%
+
+JOIN 和 OPTIONAL: 3/6 通过
+
+
+================================================================================
+测试套件: FILTER 和 BIND
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestFilterNumericComparison
+描述: FILTER数值比较：查询高薪员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?salary
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?salary .
+            FILTER(?salary > 80000)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", salary
+        FROM employees
+        WHERE salary > 80000
+        LIMIT 10
+        
+结果: 10 行, 6.54 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestFilterStringEquality
+描述: FILTER字符串比较：查询特定邮箱域名的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?email
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:email ?email .
+            FILTER(CONTAINS(?email, "@company.com"))
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", email
+        FROM employees
+        WHERE email LIKE '%@company.com%'
+        LIMIT 10
+        
+结果: 10 行, 6.16 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: email (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestFilterDateRange
+描述: FILTER日期范围：查询最近入职的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT ?firstName ?lastName ?hireDate
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:hire_date ?hireDate .
+            FILTER(?hireDate >= "2024-01-01"^^xsd:date)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", hire_date AS "hireDate"
+        FROM employees
+        WHERE hire_date >= '2024-01-01'
+        LIMIT 10
+        
+结果: 10 行, 6.02 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestFilterLogicalAnd
+描述: FILTER逻辑AND：多条件筛选
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?salary ?deptName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?salary ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+            FILTER(?salary > 60000 && ?deptName = "Engineering")
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               e.salary, d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        WHERE e.salary > 60000 AND d.department_name = 'Engineering'
+        LIMIT 10
+        
+结果: 0 行, 6.46 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["departments", "employees"], column_mapping_keys: ["dept", "dept_name", "first_name", "emp"], available: [col_dept:dep.department_id, col_dept_name:dep.department_name, col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestBindCalculation
+描述: BIND计算：计算年薪
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?annualSalary
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?monthlySalary .
+            BIND((?monthlySalary * 12) AS ?annualSalary)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName",
+               (salary * 12) AS "annualSalary"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.59 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: monthlySalary (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+
+================================================================================
+测试: TestBindStringConcat
+描述: BIND字符串：拼接全名
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?fullName ?email
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:email ?email .
+            BIND(CONCAT(?firstName, " ", ?lastName) AS ?fullName)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT CONCAT(first_name, ' ', last_name) AS "fullName", email
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.67 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: lastName (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+
+================================================================================
+测试: TestBindWithFilter
+描述: BIND + FILTER：计算工作年限并筛选
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        SELECT ?firstName ?lastName ?yearsOfService
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:hire_date ?hireDate .
+            BIND(YEAR(NOW()) - YEAR(?hireDate) AS ?yearsOfService)
+            FILTER(?yearsOfService > 5)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName",
+               (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM hire_date)) AS "yearsOfService"
+        FROM employees
+        WHERE (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM hire_date)) > 5
+        LIMIT 10
+        
+结果: 10 行, 6.99 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: yearsOfService (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 0 ✓
+失败: 7 ✗
+通过率: 0.0%
+
+FILTER 和 BIND: 0/7 通过
+
+
+================================================================================
+测试套件: 聚合和子查询
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestAggregateCountByDepartment
+描述: 聚合：按部门统计员工数
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?deptName (COUNT(?emp) AS ?empCount)
+        WHERE {
+            ?emp ex:department_id ?dept ;
+                 ex:first_name ?fn .
+            ?dept ex:department_name ?deptName .
+        }
+        GROUP BY ?deptName
+        ORDER BY DESC(?empCount)
+        LIMIT 10
+        
+结果: 10 行, 61.86 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT d.department_name AS "deptName", COUNT(*) AS "empCount"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        GROUP BY d.department_name
+        ORDER BY "empCount" DESC
+        LIMIT 10
+        
+结果: 10 行, 30.38 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestAggregateAvgSalary
+描述: 聚合：计算部门平均薪资
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?deptName (AVG(?salary) AS ?avgSalary) (MAX(?salary) AS ?maxSalary)
+        WHERE {
+            ?emp ex:department_id ?dept ;
+                 ex:salary ?salary .
+            ?dept ex:department_name ?deptName .
+        }
+        GROUP BY ?deptName
+        HAVING (AVG(?salary) > 50000)
+        ORDER BY DESC(?avgSalary)
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT d.department_name AS "deptName",
+               AVG(e.salary) AS "avgSalary",
+               MAX(e.salary) AS "maxSalary"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        GROUP BY d.department_name
+        HAVING AVG(e.salary) > 50000
+        ORDER BY "avgSalary" DESC
+        LIMIT 10
+        
+结果: 10 行, 39.63 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["departments", "employees"], column_mapping_keys: ["dept", "dept_name", "dept", "emp"], available: [col_dept:dep.department_id, col_dept_name:dep.department_name, col_dept:emp.department_id, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestAggregateSum
+描述: 聚合：计算部门总薪资支出
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?deptName (SUM(?salary) AS ?totalSalary) (COUNT(?emp) AS ?headCount)
+        WHERE {
+            ?emp ex:department_id ?dept ;
+                 ex:salary ?salary .
+            ?dept ex:department_name ?deptName .
+        }
+        GROUP BY ?deptName
+        ORDER BY DESC(?totalSalary)
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT d.department_name AS "deptName",
+               SUM(e.salary) AS "totalSalary",
+               COUNT(*) AS "headCount"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        GROUP BY d.department_name
+        ORDER BY "totalSalary" DESC
+        LIMIT 10
+        
+结果: 10 行, 35.26 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["departments", "employees"], column_mapping_keys: ["dept", "dept_name", "dept", "emp"], available: [col_dept:dep.department_id, col_dept_name:dep.department_name, col_dept:emp.department_id, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestSubqueryExists
+描述: 子查询：EXISTS - 查询有项目的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            FILTER EXISTS {
+                ?emp ex:assigned_to ?assignment .
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName"
+        FROM employees e
+        WHERE EXISTS (SELECT 1 FROM employee_projects ep WHERE ep.employee_id = e.employee_id)
+        LIMIT 10
+        
+结果: 10 行, 6.98 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: SPARQL SQL execution error: invalid input syntax for type boolean: "EXISTS { ?emp ex:assigned_to ?assignment . }"
+LINE 1: ...rst_name AS firstName FROM employees AS emp WHERE 'EXISTS { ...
+                                                             ^
+
+
+================================================================================
+测试: TestSubqueryNotExists
+描述: 子查询：NOT EXISTS - 查询没有项目的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            FILTER NOT EXISTS {
+                ?emp ex:assigned_to ?assignment .
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName"
+        FROM employees e
+        WHERE NOT EXISTS (SELECT 1 FROM employee_projects ep WHERE ep.employee_id = e.employee_id)
+        LIMIT 10
+        
+结果: 0 行, 38.61 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: SPARQL SQL execution error: invalid input syntax for type boolean: "NOT EXISTS { ?emp ex:assigned_to ?assignment . }"
+LINE 1: ...rst_name AS firstName FROM employees AS emp WHERE 'NOT EXIST...
+                                                             ^
+
+
+================================================================================
+测试: TestSubqueryScalar
+描述: 子查询：标量子查询 - 查询薪资高于平均水平的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?salary
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?salary .
+            FILTER(?salary > (SELECT (AVG(?s) AS ?avgSal) WHERE { ?e ex:salary ?s }))
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.07 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", salary
+        FROM employees
+        WHERE salary > (SELECT AVG(salary) FROM employees)
+        LIMIT 10
+        
+结果: 10 行, 20.05 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestGroupByMultiple
+描述: 多列分组：按部门和职位统计
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?deptName ?positionTitle (COUNT(?emp) AS ?count) (AVG(?salary) AS ?avgSalary)
+        WHERE {
+            ?emp ex:department_id ?dept ;
+                 ex:position_id ?pos ;
+                 ex:salary ?salary .
+            ?dept ex:department_name ?deptName .
+            ?pos ex:position_title ?positionTitle .
+        }
+        GROUP BY ?deptName ?positionTitle
+        ORDER BY ?deptName DESC(?count)
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT d.department_name AS "deptName", p.position_title AS "positionTitle",
+               COUNT(*) AS "count", AVG(e.salary) AS "avgSalary"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        JOIN positions p ON e.position_id = p.position_id
+        GROUP BY d.department_name, p.position_title
+        ORDER BY d.department_name, "count" DESC
+        LIMIT 10
+        
+结果: 10 行, 59.26 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["employees", "departments", "positions"], column_mapping_keys: ["emp", "dept", "dept_name", "dept", "pos", "position_title"], available: [col_emp:emp.employee_id, col_dept:emp.department_id, col_dept_name:dep.department_name, col_dept:dep.department_id, col_pos:pos.position_id, col_position_title:pos.position_title])
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 2 ✓
+失败: 5 ✗
+通过率: 28.6%
+
+聚合和子查询: 2/7 通过
+
+
+================================================================================
+测试套件: UNION 和高级特性
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestUnionTwoPatterns
+描述: UNION：查询Engineering或Sales部门的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?deptName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+            {
+                FILTER(?deptName = "Engineering")
+            }
+            UNION
+            {
+                FILTER(?deptName = "Sales")
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 41.72 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        WHERE d.department_name IN ('Engineering', 'Sales')
+        LIMIT 10
+        
+结果: 0 行, 6.77 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestValuesBlock
+描述: VALUES：内联数据 - 查询特定部门ID的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?dept
+        WHERE {
+            VALUES ?dept { 1 2 3 }
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:department_id ?dept .
+        }
+        LIMIT 10
+        
+结果: 10 行, 36.83 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName", department_id AS "dept"
+        FROM employees
+        WHERE department_id IN (1, 2, 3)
+        LIMIT 10
+        
+结果: 10 行, 6.26 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - Value mismatch for 'dept': SPARQL='1', SQL='2'
+
+================================================================================
+测试: TestInFilter
+描述: IN 过滤器：查询特定职位的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?positionTitle
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:position_id ?pos .
+            ?pos ex:position_title ?positionTitle .
+            FILTER(?positionTitle IN ("Software Engineer", "Senior Engineer", "Tech Lead"))
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName",
+               p.position_title AS "positionTitle"
+        FROM employees e
+        JOIN positions p ON e.position_id = p.position_id
+        WHERE p.position_title IN ('Software Engineer', 'Senior Engineer', 'Tech Lead')
+        LIMIT 10
+        
+结果: 0 行, 7.43 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: positionTitle IN ("Software Engineer", "Senior Engineer", "Tech Lead") (tables: ["employees", "positions"], column_mapping_keys: ["first_name", "emp", "pos", "position_title"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_pos:pos.position_id, col_position_title:pos.position_title])
+
+================================================================================
+测试: TestCoalesce
+描述: COALESCE：处理NULL值 - 员工电话或邮箱
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?contact
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            OPTIONAL { ?emp ex:phone ?phone }
+            OPTIONAL { ?emp ex:email ?email }
+            BIND(COALESCE(?phone, ?email, "N/A") AS ?contact)
+        }
+        LIMIT 10
+        
+结果: 10 行, 39.86 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName",
+               COALESCE(phone, email, 'N/A') AS "contact"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.09 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestIfExpression
+描述: IF条件表达式：根据薪资等级分类
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName ?salaryLevel
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:salary ?salary .
+            BIND(IF(?salary > 100000, "High", IF(?salary > 60000, "Medium", "Low")) AS ?salaryLevel)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName",
+               CASE 
+                   WHEN salary > 100000 THEN 'High'
+                   WHEN salary > 60000 THEN 'Medium'
+                   ELSE 'Low'
+               END AS "salaryLevel"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.58 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["employees"], column_mapping_keys: ["first_name", "emp", "first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestMinusPattern
+描述: MINUS：排除特定模式 - 查询有薪资记录但没有项目的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            ?emp ex:salary_record ?sal .
+            MINUS {
+                ?emp ex:assigned_to ?assignment .
+            }
+        }
+        LIMIT 10
+        
+结果: 0 行, 37.38 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", e.last_name AS "lastName"
+        FROM employees e
+        WHERE EXISTS (SELECT 1 FROM salaries s WHERE s.employee_id = e.employee_id)
+          AND NOT EXISTS (SELECT 1 FROM employee_projects ep WHERE ep.employee_id = e.employee_id)
+        LIMIT 10
+        
+结果: 0 行, 246.80 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestServicePattern
+描述: SERVICE：跨数据源查询（模拟）
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lastName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName .
+            SERVICE <http://example.org/employee-info> {
+                ?emp ex:status "Active" .
+            }
+        }
+        LIMIT 10
+        
+结果: 10 行, 36.42 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", last_name AS "lastName"
+        FROM employees
+        WHERE status = 'Active'
+        LIMIT 10
+        
+结果: 10 行, 6.26 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 4 ✓
+失败: 3 ✗
+通过率: 57.1%
+
+UNION 和高级特性: 4/7 通过
+
+
+================================================================================
+测试套件: 属性路径
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestPathSequence
+描述: 序列路径 / : 查询员工的部门名称
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?deptName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:department_id/ex:department_name ?deptName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 41.17 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        LIMIT 10
+        
+结果: 10 行, 7.95 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestPathInverse
+描述: 反向路径 ^ : 查询管理某部门的经理
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?managerName ?deptName
+        WHERE {
+            ?mgr ex:first_name ?managerName .
+            ?dept ex:manager ^ex:reports_to ?mgr ;
+                  ex:department_name ?deptName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 37.87 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT m.first_name AS "managerName", d.department_name AS "deptName"
+        FROM departments d
+        JOIN employees m ON d.manager_id = m.employee_id
+        LIMIT 10
+        
+结果: 10 行, 6.56 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestPathAlternative
+描述: 替代路径 | : 查询员工的邮箱或电话
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?contact
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 (ex:email|ex:phone) ?contact .
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.29 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", email AS "contact"
+        FROM employees WHERE email IS NOT NULL
+        UNION ALL
+        SELECT first_name, phone FROM employees WHERE phone IS NOT NULL
+        LIMIT 10
+        
+结果: 10 行, 6.37 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestPathZeroOrMore
+描述: 零或多 * : 查询所有下属（包括间接）
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?manager ?subordinate
+        WHERE {
+            ?mgr ex:first_name ?manager .
+            ?sub ex:reports_to* ?mgr ;
+               ex:first_name ?subordinate .
+        }
+        LIMIT 10
+        
+结果: 10 行, 28562.32 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        WITH RECURSIVE subordinates AS (
+            SELECT employee_id, first_name AS "subordinate", manager_id
+            FROM employees WHERE manager_id IS NOT NULL
+            UNION ALL
+            SELECT e.employee_id, e.first_name, e.manager_id
+            FROM employees e
+            JOIN subordinates s ON e.manager_id = s.employee_id
+        )
+        SELECT m.first_name AS "manager", s."subordinate"
+        FROM subordinates s
+        JOIN employees m ON s.manager_id = m.employee_id
+ ...
+结果: 0 行, 21.54 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - Row count mismatch: SPARQL=10, SQL=0
+
+================================================================================
+测试: TestPathOneOrMore
+描述: 一或多 + : 查询间接下属（不包括直接上级）
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?manager ?indirectSub
+        WHERE {
+            ?mgr ex:first_name ?manager .
+            ?sub ex:reports_to+/ex:first_name ?indirectSub .
+            ?sub ex:reports_to/ex:manager ?mid .
+            FILTER(?mid != ?mgr)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        WITH RECURSIVE subordinates AS (
+            SELECT employee_id, first_name, manager_id, 1 AS level
+            FROM employees WHERE manager_id IS NOT NULL
+            UNION ALL
+            SELECT e.employee_id, e.first_name, e.manager_id, s.level + 1
+            FROM employees e
+            JOIN subordinates s ON e.manager_id = s.employee_id
+            WHERE s.level >= 1
+        )
+        SELECT m.first_name AS "manager", s.first_name AS "indirectSub"
+        FROM subordinates s
+     ...
+结果: 0 行, 16.95 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Generation error: Complex paths in sequence not yet supported
+
+================================================================================
+测试: TestPathOptional
+描述: 可选 ? : 查询可能有上级的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?managerName
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:reports_to?/ex:first_name ?managerName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 35.96 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", m.first_name AS "managerName"
+        FROM employees e
+        LEFT JOIN employees m ON e.manager_id = m.employee_id
+        LIMIT 10
+        
+结果: 10 行, 5.71 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestPathNegation
+描述: 否定 ! : 查询非邮箱的联系方式
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?notEmail
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 !(ex:email) ?notEmail .
+        }
+        LIMIT 10
+        
+结果: 10 行, 50.92 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", phone AS "notEmail"
+        FROM employees
+        WHERE phone IS NOT NULL
+        LIMIT 10
+        
+结果: 10 行, 8.34 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestPathComplex
+描述: 复杂组合 : 部门-职位-薪资路径
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?empName ?deptName ?positionLevel
+        WHERE {
+            ?emp ex:first_name ?empName ;
+                 (ex:department_id|ex:position_id)/ex:department_name ?deptName ;
+                 ex:position_id/ex:position_level ?positionLevel .
+        }
+        LIMIT 10
+        
+结果: 10 行, 42.72 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "empName", d.department_name AS "deptName",
+               p.position_level AS "positionLevel"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        JOIN positions p ON e.position_id = p.position_id
+        LIMIT 10
+        
+结果: 10 行, 24.67 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试汇总
+================================================================================
+总计: 8 个测试
+通过: 6 ✓
+失败: 2 ✗
+通过率: 75.0%
+
+属性路径: 6/8 通过
+
+
+================================================================================
+测试套件: 日期时间函数
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestNowFunction
+描述: 当前时间函数 NOW()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?currentTime
+        WHERE {
+            ?emp ex:first_name ?firstName .
+            BIND(NOW() AS ?currentTime)
+        }
+        LIMIT 5
+        
+结果: 5 行, 92.05 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", CURRENT_TIMESTAMP AS "currentTime"
+        FROM employees
+        LIMIT 5
+        
+结果: 5 行, 7.63 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestYearFunction
+描述: 年份提取 YEAR()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireYear
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND(YEAR(?hireDate) AS ?hireYear)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", EXTRACT(YEAR FROM hire_date) AS "hireYear"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.86 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+
+================================================================================
+测试: TestMonthFunction
+描述: 月份提取 MONTH()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireMonth
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND(MONTH(?hireDate) AS ?hireMonth)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", EXTRACT(MONTH FROM hire_date) AS "hireMonth"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 7.27 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["first_name", "emp", "first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestDayFunction
+描述: 日期提取 DAY()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireDay
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND(DAY(?hireDate) AS ?hireDay)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", EXTRACT(DAY FROM hire_date) AS "hireDay"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.47 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["first_name", "emp", "first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestHoursFunction
+描述: 小时提取 HOURS()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?checkInHour
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:check_in_time ?checkIn .
+            BIND(HOURS(?checkIn) AS ?checkInHour)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", EXTRACT(HOUR FROM a.check_in) AS "checkInHour"
+        FROM employees e
+        JOIN attendance a ON e.employee_id = a.employee_id
+        LIMIT 10
+        
+结果: 10 行, 8.43 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: checkIn (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+
+================================================================================
+测试: TestDateDiff
+描述: 日期差计算 - 计算工龄
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?yearsOfService
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND((YEAR(NOW()) - YEAR(?hireDate)) AS ?yearsOfService)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName",
+               (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM hire_date)) AS "yearsOfService"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.51 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+
+================================================================================
+测试: TestDateComparison
+描述: 日期比较 - 查询2020年前入职的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireDate
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            FILTER(YEAR(?hireDate) < 2020)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", hire_date AS "hireDate"
+        FROM employees
+        WHERE EXTRACT(YEAR FROM hire_date) < 2020
+        LIMIT 10
+        
+结果: 10 行, 6.27 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name])
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 1 ✓
+失败: 6 ✗
+通过率: 14.3%
+
+日期时间函数: 1/7 通过
+
+
+================================================================================
+测试套件: 字符串函数
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestStrlenFunction
+描述: 字符串长度 STRLEN()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?nameLength
+        WHERE {
+            ?emp ex:first_name ?firstName .
+            BIND(STRLEN(?firstName) AS ?nameLength)
+        }
+        LIMIT 10
+        
+结果: 10 行, 37.86 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", LENGTH(first_name) AS "nameLength"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 5.89 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestUcaseFunction
+描述: 转大写 UCASE()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?upperName
+        WHERE {
+            ?emp ex:first_name ?firstName .
+            BIND(UCASE(?firstName) AS ?upperName)
+        }
+        LIMIT 10
+        
+结果: 10 行, 42.61 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", UPPER(first_name) AS "upperName"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.58 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestLcaseFunction
+描述: 转小写 LCASE()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?lowerName
+        WHERE {
+            ?emp ex:first_name ?firstName .
+            BIND(LCASE(?firstName) AS ?lowerName)
+        }
+        LIMIT 10
+        
+结果: 10 行, 37.10 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", LOWER(first_name) AS "lowerName"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.86 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestSubstrFunction
+描述: 子字符串 SUBSTR()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?email ?domain
+        WHERE {
+            ?emp ex:email ?email .
+            BIND(SUBSTR(?email, STRLEN(?email) - 12) AS ?domain)
+        }
+        LIMIT 10
+        
+结果: 10 行, 42.74 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT email, SUBSTRING(email FROM LENGTH(email) - 12) AS "domain"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 7.05 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestStrstartsFunction
+描述: 字符串开头检查 STRSTARTS()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName
+        WHERE {
+            ?emp ex:first_name ?firstName .
+            FILTER(STRSTARTS(?firstName, "John"))
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName"
+        FROM employees
+        WHERE first_name LIKE 'John%'
+        LIMIT 10
+        
+结果: 0 行, 14.34 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: SPARQL SQL execution error: function strstarts(character varying, unknown) does not exist
+LINE 1: ...rst_name AS firstName FROM employees AS emp WHERE STRSTARTS(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+
+================================================================================
+测试: TestStrendsFunction
+描述: 字符串结尾检查 STRENDS()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?email
+        WHERE {
+            ?emp ex:email ?email .
+            FILTER(STRENDS(?email, ".com"))
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT email
+        FROM employees
+        WHERE email LIKE '%.com'
+        LIMIT 10
+        
+结果: 10 行, 6.42 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: SPARQL SQL execution error: function strends(character varying, unknown) does not exist
+LINE 1: ...CT emp.email AS email FROM employees AS emp WHERE STRENDS(em...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+
+================================================================================
+测试: TestReplaceFunction
+描述: 字符串替换 REPLACE()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?email ?maskedEmail
+        WHERE {
+            ?emp ex:email ?email .
+            BIND(REPLACE(?email, "@company.com", "@***.com") AS ?maskedEmail)
+        }
+        LIMIT 10
+        
+结果: 10 行, 41.43 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT email, REPLACE(email, '@company.com', '@***.com') AS "maskedEmail"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.68 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestRegexFunction
+描述: 正则匹配 REGEX()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?phone
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:phone ?phone .
+            FILTER(REGEX(?phone, "^[0-9]{3}-[0-9]{4}$"))
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", phone
+        FROM employees
+        WHERE phone ~ '^[0-9]{3}-[0-9]{4}$'
+        LIMIT 10
+        
+结果: 10 行, 6.43 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: phone (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestStrbeforeFunction
+描述: 字符串前部 STRBEFORE()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?email ?localPart
+        WHERE {
+            ?emp ex:email ?email .
+            BIND(STRBEFORE(?email, "@") AS ?localPart)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT email, SPLIT_PART(email, '@', 1) AS "localPart"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.22 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: SPARQL SQL execution error: function strbefore(character varying, unknown) does not exist
+LINE 1: ...RE(emp.email, '@')] */ SELECT emp.email AS email, STRBEFORE(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+
+================================================================================
+测试汇总
+================================================================================
+总计: 9 个测试
+通过: 5 ✓
+失败: 4 ✗
+通过率: 55.6%
+
+字符串函数: 5/9 通过
+
+
+================================================================================
+测试套件: CONSTRUCT 和 GRAPH
+================================================================================
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestConstructBasic
+描述: 基础 CONSTRUCT: 构造员工RDF图
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        CONSTRUCT {
+            ?emp a ex:Employee ;
+                 ex:name ?fullName ;
+                 ex:worksIn ?deptName .
+        }
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName .
+            BIND(CONCAT(?firstName, " ", ?lastName) AS ?fullName)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.employee_id AS "emp", 
+               CONCAT(e.first_name, ' ', e.last_name) AS "fullName",
+               d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        LIMIT 10
+        
+结果: 10 行, 6.33 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: lastName (tables: ["departments", "employees"], column_mapping_keys: ["dept_name", "dept", "first_name", "emp", "dept_name", "dept", "first_name", "emp"], available: [col_dept_name:dep.department_name, col_dept:dep.department_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_dept_name:dep.department_name, col_dept:dep.department_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+
+================================================================================
+测试: TestConstructWhere
+描述: CONSTRUCT WHERE 简写形式
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        CONSTRUCT WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:last_name ?lastName ;
+                 ex:email ?email .
+        }
+        LIMIT 5
+        
+结果: 5 行, 43.21 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT employee_id AS "emp", first_name AS "firstName",
+               last_name AS "lastName", email
+        FROM employees
+        LIMIT 5
+        
+结果: 5 行, 7.44 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestGraphVariable
+描述: GRAPH 变量: 从命名图查询
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?g ?firstName ?deptName
+        WHERE {
+            GRAPH ?g {
+                ?emp ex:first_name ?firstName ;
+                     ex:department_id ?dept .
+                ?dept ex:department_name ?deptName .
+            }
+        }
+        LIMIT 10
+        
+结果: 10 行, 40.69 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT 'http://example.org/graph/hr' AS "g",
+               e.first_name AS "firstName",
+               d.department_name AS "deptName"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        LIMIT 10
+        
+结果: 10 行, 6.67 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestGraphNamed
+描述: GRAPH 常量: 指定命名图
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?salary
+        FROM NAMED <http://example.org/graph/employees>
+        WHERE {
+            GRAPH <http://example.org/graph/employees> {
+                ?emp ex:first_name ?firstName ;
+                     ex:salary ?salary .
+            }
+        }
+        LIMIT 10
+        
+结果: 10 行, 39.50 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", salary
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.24 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestGraphUnion
+描述: 多图联合查询
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?source
+        WHERE {
+            {
+                GRAPH <http://example.org/graph/hr> {
+                    ?emp ex:first_name ?firstName .
+                    BIND("HR" AS ?source)
+                }
+            }
+            UNION
+            {
+                GRAPH <http://example.org/graph/crm> {
+                    ?cust ex:contact_name ?firstName .
+                    BIND("CRM" AS ?source)
+                }
+           ...
+结果: 0 行, 38.84 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", 'HR' AS "source"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 5.75 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - Row count mismatch: SPARQL=0, SQL=10
+
+================================================================================
+测试: TestConstructTemplate
+描述: CONSTRUCT 复杂模板: 创建组织架构图
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        CONSTRUCT {
+            ?dept a ex:Department ;
+                  ex:hasEmployee ?emp ;
+                  ex:managedBy ?mgr .
+            ?emp ex:reportsTo ?mgr .
+        }
+        WHERE {
+            ?emp ex:first_name ?empName ;
+                 ex:department_id ?dept .
+            ?dept ex:department_name ?deptName ;
+                  ex:manager ?mgr .
+            ?mgr ex:first_name ?mgrName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 41.78 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT d.department_id AS "dept", e.employee_id AS "emp",
+               m.employee_id AS "mgr"
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        LEFT JOIN employees m ON d.manager_id = m.employee_id
+        LIMIT 10
+        
+结果: 10 行, 7.10 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestFromGraph
+描述: FROM 指定默认图
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName
+        FROM <http://example.org/graph/current>
+        WHERE {
+            ?emp ex:first_name ?firstName .
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.78 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.20 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 5 ✓
+失败: 2 ✗
+通过率: 71.4%
+
+CONSTRUCT 和 GRAPH: 5/7 通过
+
+
+================================================================================
+测试汇总报告
+================================================================================
+总测试数:   64
+通过:       32 ✓
+失败:       32 ✗
+通过率:     50.0%
+总耗时:     32.25 秒
+================================================================================
+
+失败的测试:
+  ✗ TestOptionalEmployeeSalary
+    - Row count mismatch: SPARQL=0, SQL=10
+  ✗ TestOptionalEmployeeProject
+    - Row count mismatch: SPARQL=0, SQL=10
+  ✗ TestNestedOptional
+    - Row count mismatch: SPARQL=0, SQL=10
+  ✗ TestFilterNumericComparison
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestFilterStringEquality
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: email (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestFilterDateRange
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestFilterLogicalAnd
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["departments", "employees"], column_mapping_keys: ["dept", "dept_name", "first_name", "emp"], available: [col_dept:dep.department_id, col_dept_name:dep.department_name, col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestBindCalculation
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: monthlySalary (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+  ✗ TestBindStringConcat
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: lastName (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+  ✗ TestBindWithFilter
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: yearsOfService (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestAggregateAvgSalary
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["departments", "employees"], column_mapping_keys: ["dept", "dept_name", "dept", "emp"], available: [col_dept:dep.department_id, col_dept_name:dep.department_name, col_dept:emp.department_id, col_emp:emp.employee_id])
+  ✗ TestAggregateSum
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["departments", "employees"], column_mapping_keys: ["dept", "dept_name", "dept", "emp"], available: [col_dept:dep.department_id, col_dept_name:dep.department_name, col_dept:emp.department_id, col_emp:emp.employee_id])
+  ✗ TestSubqueryExists
+    - SPARQL error: SPARQL SQL execution error: invalid input syntax for type boolean: "EXISTS { ?emp ex:assigned_to ?assignment . }"
+LINE 1: ...rst_name AS firstName FROM employees AS emp WHERE 'EXISTS { ...
+                                                             ^
+
+  ✗ TestSubqueryNotExists
+    - SPARQL error: SPARQL SQL execution error: invalid input syntax for type boolean: "NOT EXISTS { ?emp ex:assigned_to ?assignment . }"
+LINE 1: ...rst_name AS firstName FROM employees AS emp WHERE 'NOT EXIST...
+                                                             ^
+
+  ✗ TestGroupByMultiple
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["employees", "departments", "positions"], column_mapping_keys: ["emp", "dept", "dept_name", "dept", "pos", "position_title"], available: [col_emp:emp.employee_id, col_dept:emp.department_id, col_dept_name:dep.department_name, col_dept:dep.department_id, col_pos:pos.position_id, col_position_title:pos.position_title])
+  ✗ TestValuesBlock
+    - Value mismatch for 'dept': SPARQL='1', SQL='2'
+  ✗ TestInFilter
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: positionTitle IN ("Software Engineer", "Senior Engineer", "Tech Lead") (tables: ["employees", "positions"], column_mapping_keys: ["first_name", "emp", "pos", "position_title"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_pos:pos.position_id, col_position_title:pos.position_title])
+  ✗ TestIfExpression
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: salary (tables: ["employees"], column_mapping_keys: ["first_name", "emp", "first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestPathZeroOrMore
+    - Row count mismatch: SPARQL=10, SQL=0
+  ✗ TestPathOneOrMore
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Generation error: Complex paths in sequence not yet supported
+  ✗ TestYearFunction
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+  ✗ TestMonthFunction
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["first_name", "emp", "first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestDayFunction
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["first_name", "emp", "first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestHoursFunction
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: checkIn (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+  ✗ TestDateDiff
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["emp", "first_name", "emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_first_name:emp.first_name])
+  ✗ TestDateComparison
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: hireDate (tables: ["employees"], column_mapping_keys: ["emp", "first_name"], available: [col_emp:emp.employee_id, col_first_name:emp.first_name])
+  ✗ TestStrstartsFunction
+    - SPARQL error: SPARQL SQL execution error: function strstarts(character varying, unknown) does not exist
+LINE 1: ...rst_name AS firstName FROM employees AS emp WHERE STRSTARTS(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+  ✗ TestStrendsFunction
+    - SPARQL error: SPARQL SQL execution error: function strends(character varying, unknown) does not exist
+LINE 1: ...CT emp.email AS email FROM employees AS emp WHERE STRENDS(em...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+  ✗ TestRegexFunction
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: phone (tables: ["employees"], column_mapping_keys: ["first_name", "emp"], available: [col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestStrbeforeFunction
+    - SPARQL error: SPARQL SQL execution error: function strbefore(character varying, unknown) does not exist
+LINE 1: ...RE(emp.email, '@')] */ SELECT emp.email AS email, STRBEFORE(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+  ✗ TestConstructBasic
+    - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: lastName (tables: ["departments", "employees"], column_mapping_keys: ["dept_name", "dept", "first_name", "emp", "dept_name", "dept", "first_name", "emp"], available: [col_dept_name:dep.department_name, col_dept:dep.department_id, col_first_name:emp.first_name, col_emp:emp.employee_id, col_dept_name:dep.department_name, col_dept:dep.department_id, col_first_name:emp.first_name, col_emp:emp.employee_id])
+  ✗ TestGraphUnion
+    - Row count mismatch: SPARQL=0, SQL=10
+
+JSON报告: sparql_test_report_20260409_152427.json
+Markdown报告: sparql_test_report_20260409_152427.md

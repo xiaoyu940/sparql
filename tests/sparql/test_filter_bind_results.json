@@ -1,0 +1,804 @@
+[
+  {
+    "name": "TestFilterNumericComparison",
+    "description": "FILTER数值比较：查询高薪员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "salary"
+      ],
+      "rows": [
+        {
+          "firstName": "First31",
+          "lastName": "Last31",
+          "salary": "81000.0"
+        },
+        {
+          "firstName": "First32",
+          "lastName": "Last32",
+          "salary": "82000.0"
+        },
+        {
+          "firstName": "First33",
+          "lastName": "Last33",
+          "salary": "83000.0"
+        },
+        {
+          "firstName": "First34",
+          "lastName": "Last34",
+          "salary": "84000.0"
+        },
+        {
+          "firstName": "First35",
+          "lastName": "Last35",
+          "salary": "85000.0"
+        },
+        {
+          "firstName": "First36",
+          "lastName": "Last36",
+          "salary": "86000.0"
+        },
+        {
+          "firstName": "First37",
+          "lastName": "Last37",
+          "salary": "87000.0"
+        },
+        {
+          "firstName": "First38",
+          "lastName": "Last38",
+          "salary": "88000.0"
+        },
+        {
+          "firstName": "First39",
+          "lastName": "Last39",
+          "salary": "89000.0"
+        },
+        {
+          "firstName": "First40",
+          "lastName": "Last40",
+          "salary": "90000.0"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 41.23997688293457
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "salary"
+      ],
+      "rows": [
+        {
+          "firstName": "First31",
+          "lastName": "Last31",
+          "salary": "81000.00"
+        },
+        {
+          "firstName": "First32",
+          "lastName": "Last32",
+          "salary": "82000.00"
+        },
+        {
+          "firstName": "First33",
+          "lastName": "Last33",
+          "salary": "83000.00"
+        },
+        {
+          "firstName": "First34",
+          "lastName": "Last34",
+          "salary": "84000.00"
+        },
+        {
+          "firstName": "First35",
+          "lastName": "Last35",
+          "salary": "85000.00"
+        },
+        {
+          "firstName": "First36",
+          "lastName": "Last36",
+          "salary": "86000.00"
+        },
+        {
+          "firstName": "First37",
+          "lastName": "Last37",
+          "salary": "87000.00"
+        },
+        {
+          "firstName": "First38",
+          "lastName": "Last38",
+          "salary": "88000.00"
+        },
+        {
+          "firstName": "First39",
+          "lastName": "Last39",
+          "salary": "89000.00"
+        },
+        {
+          "firstName": "First40",
+          "lastName": "Last40",
+          "salary": "90000.00"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 21.943092346191406
+    }
+  },
+  {
+    "name": "TestFilterStringEquality",
+    "description": "FILTER字符串比较：查询特定邮箱域名的员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "email"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "email": "employee1@company.com"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "email": "employee2@company.com"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "email": "employee3@company.com"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "email": "employee4@company.com"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "email": "employee5@company.com"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "email": "employee6@company.com"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "email": "employee7@company.com"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "email": "employee8@company.com"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "email": "employee9@company.com"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "email": "employee10@company.com"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 31.911611557006836
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "email"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "email": "employee1@company.com"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "email": "employee2@company.com"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "email": "employee3@company.com"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "email": "employee4@company.com"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "email": "employee5@company.com"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "email": "employee6@company.com"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "email": "employee7@company.com"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "email": "employee8@company.com"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "email": "employee9@company.com"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "email": "employee10@company.com"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 20.051002502441406
+    }
+  },
+  {
+    "name": "TestFilterDateRange",
+    "description": "FILTER日期范围：查询最近入职的员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "hireDate"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "hireDate": "2026-04-06"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "hireDate": "2026-04-05"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "hireDate": "2026-04-04"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "hireDate": "2026-04-03"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "hireDate": "2026-04-02"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "hireDate": "2026-04-01"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "hireDate": "2026-03-31"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "hireDate": "2026-03-30"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "hireDate": "2026-03-29"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "hireDate": "2026-03-28"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 42.116641998291016
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "hireDate"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "hireDate": "2026-04-06"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "hireDate": "2026-04-05"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "hireDate": "2026-04-04"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "hireDate": "2026-04-03"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "hireDate": "2026-04-02"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "hireDate": "2026-04-01"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "hireDate": "2026-03-31"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "hireDate": "2026-03-30"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "hireDate": "2026-03-29"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "hireDate": "2026-03-28"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 22.208452224731445
+    }
+  },
+  {
+    "name": "TestFilterLogicalAnd",
+    "description": "FILTER逻辑AND：多条件筛选",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "salary",
+        "deptName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 36.561012268066406
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "salary",
+        "deptName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 18.485069274902344
+    }
+  },
+  {
+    "name": "TestBindCalculation",
+    "description": "BIND计算：计算年薪",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "annualSalary"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "annualSalary": "612000.0"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "annualSalary": "624000.0"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "annualSalary": "636000.0"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "annualSalary": "648000.0"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "annualSalary": "660000.0"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "annualSalary": "672000.0"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "annualSalary": "684000.0"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "annualSalary": "696000.0"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "annualSalary": "708000.0"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "annualSalary": "720000.0"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 32.53602981567383
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "annualSalary"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "annualSalary": "612000.00"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "annualSalary": "624000.00"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "annualSalary": "636000.00"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "annualSalary": "648000.00"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "annualSalary": "660000.00"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "annualSalary": "672000.00"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "annualSalary": "684000.00"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "annualSalary": "696000.00"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "annualSalary": "708000.00"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "annualSalary": "720000.00"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 19.635677337646484
+    }
+  },
+  {
+    "name": "TestBindStringConcat",
+    "description": "BIND字符串：拼接全名",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "fullName",
+        "email"
+      ],
+      "rows": [
+        {
+          "fullName": "First1 Last1",
+          "email": "employee1@company.com"
+        },
+        {
+          "fullName": "First2 Last2",
+          "email": "employee2@company.com"
+        },
+        {
+          "fullName": "First3 Last3",
+          "email": "employee3@company.com"
+        },
+        {
+          "fullName": "First4 Last4",
+          "email": "employee4@company.com"
+        },
+        {
+          "fullName": "First5 Last5",
+          "email": "employee5@company.com"
+        },
+        {
+          "fullName": "First6 Last6",
+          "email": "employee6@company.com"
+        },
+        {
+          "fullName": "First7 Last7",
+          "email": "employee7@company.com"
+        },
+        {
+          "fullName": "First8 Last8",
+          "email": "employee8@company.com"
+        },
+        {
+          "fullName": "First9 Last9",
+          "email": "employee9@company.com"
+        },
+        {
+          "fullName": "First10 Last10",
+          "email": "employee10@company.com"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 35.78662872314453
+    },
+    "sql_result": {
+      "columns": [
+        "fullName",
+        "email"
+      ],
+      "rows": [
+        {
+          "fullName": "First1 Last1",
+          "email": "employee1@company.com"
+        },
+        {
+          "fullName": "First2 Last2",
+          "email": "employee2@company.com"
+        },
+        {
+          "fullName": "First3 Last3",
+          "email": "employee3@company.com"
+        },
+        {
+          "fullName": "First4 Last4",
+          "email": "employee4@company.com"
+        },
+        {
+          "fullName": "First5 Last5",
+          "email": "employee5@company.com"
+        },
+        {
+          "fullName": "First6 Last6",
+          "email": "employee6@company.com"
+        },
+        {
+          "fullName": "First7 Last7",
+          "email": "employee7@company.com"
+        },
+        {
+          "fullName": "First8 Last8",
+          "email": "employee8@company.com"
+        },
+        {
+          "fullName": "First9 Last9",
+          "email": "employee9@company.com"
+        },
+        {
+          "fullName": "First10 Last10",
+          "email": "employee10@company.com"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 15.522480010986328
+    }
+  },
+  {
+    "name": "TestBindWithFilter",
+    "description": "BIND + FILTER：计算工作年限并筛选",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "yearsOfService"
+      ],
+      "rows": [
+        {
+          "firstName": "First1923",
+          "lastName": "Last1923",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1924",
+          "lastName": "Last1924",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1925",
+          "lastName": "Last1925",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1926",
+          "lastName": "Last1926",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1927",
+          "lastName": "Last1927",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1928",
+          "lastName": "Last1928",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1929",
+          "lastName": "Last1929",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1930",
+          "lastName": "Last1930",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1931",
+          "lastName": "Last1931",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1932",
+          "lastName": "Last1932",
+          "yearsOfService": "6"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 41.75877571105957
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "yearsOfService"
+      ],
+      "rows": [
+        {
+          "firstName": "First1923",
+          "lastName": "Last1923",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1924",
+          "lastName": "Last1924",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1925",
+          "lastName": "Last1925",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1926",
+          "lastName": "Last1926",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1927",
+          "lastName": "Last1927",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1928",
+          "lastName": "Last1928",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1929",
+          "lastName": "Last1929",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1930",
+          "lastName": "Last1930",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1931",
+          "lastName": "Last1931",
+          "yearsOfService": "6"
+        },
+        {
+          "firstName": "First1932",
+          "lastName": "Last1932",
+          "yearsOfService": "6"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 17.65584945678711
+    }
+  }
+]

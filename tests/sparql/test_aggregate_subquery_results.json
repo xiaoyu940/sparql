@@ -1,0 +1,640 @@
+[
+  {
+    "name": "TestAggregateCountByDepartment",
+    "description": "聚合：按部门统计员工数",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "empCount",
+        "deptName"
+      ],
+      "rows": [
+        {
+          "empCount": "1000",
+          "deptName": "Department_86"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_85"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_26"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_94"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_28"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_51"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_64"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_42"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_35"
+        },
+        {
+          "empCount": "1000",
+          "deptName": "Department_84"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 103.5757064819336
+    },
+    "sql_result": {
+      "columns": [
+        "deptName",
+        "empCount"
+      ],
+      "rows": [
+        {
+          "deptName": "Department_86",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_85",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_26",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_94",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_28",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_51",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_64",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_42",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_35",
+          "empCount": 1000
+        },
+        {
+          "deptName": "Department_84",
+          "empCount": 1000
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 26.70431137084961
+    }
+  },
+  {
+    "name": "TestAggregateAvgSalary",
+    "description": "聚合：计算部门平均薪资",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "avgSalary",
+        "maxSalary",
+        "deptName"
+      ],
+      "rows": [
+        {
+          "avgSalary": "199000.0",
+          "maxSalary": "249000.0",
+          "deptName": "Department_100"
+        },
+        {
+          "avgSalary": "198000.0",
+          "maxSalary": "248000.0",
+          "deptName": "Department_99"
+        },
+        {
+          "avgSalary": "197000.0",
+          "maxSalary": "247000.0",
+          "deptName": "Department_98"
+        },
+        {
+          "avgSalary": "196000.0",
+          "maxSalary": "246000.0",
+          "deptName": "Department_97"
+        },
+        {
+          "avgSalary": "195000.0",
+          "maxSalary": "245000.0",
+          "deptName": "Department_96"
+        },
+        {
+          "avgSalary": "194000.0",
+          "maxSalary": "244000.0",
+          "deptName": "Department_95"
+        },
+        {
+          "avgSalary": "193000.0",
+          "maxSalary": "243000.0",
+          "deptName": "Department_94"
+        },
+        {
+          "avgSalary": "192000.0",
+          "maxSalary": "242000.0",
+          "deptName": "Department_93"
+        },
+        {
+          "avgSalary": "191000.0",
+          "maxSalary": "241000.0",
+          "deptName": "Department_92"
+        },
+        {
+          "avgSalary": "190000.0",
+          "maxSalary": "240000.0",
+          "deptName": "Department_91"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 59.021949768066406
+    },
+    "sql_result": {
+      "columns": [
+        "deptName",
+        "avgSalary",
+        "maxSalary"
+      ],
+      "rows": [
+        {
+          "deptName": "Department_100",
+          "avgSalary": "199000.000000000000",
+          "maxSalary": "249000.00"
+        },
+        {
+          "deptName": "Department_99",
+          "avgSalary": "198000.000000000000",
+          "maxSalary": "248000.00"
+        },
+        {
+          "deptName": "Department_98",
+          "avgSalary": "197000.000000000000",
+          "maxSalary": "247000.00"
+        },
+        {
+          "deptName": "Department_97",
+          "avgSalary": "196000.000000000000",
+          "maxSalary": "246000.00"
+        },
+        {
+          "deptName": "Department_96",
+          "avgSalary": "195000.000000000000",
+          "maxSalary": "245000.00"
+        },
+        {
+          "deptName": "Department_95",
+          "avgSalary": "194000.000000000000",
+          "maxSalary": "244000.00"
+        },
+        {
+          "deptName": "Department_94",
+          "avgSalary": "193000.000000000000",
+          "maxSalary": "243000.00"
+        },
+        {
+          "deptName": "Department_93",
+          "avgSalary": "192000.000000000000",
+          "maxSalary": "242000.00"
+        },
+        {
+          "deptName": "Department_92",
+          "avgSalary": "191000.000000000000",
+          "maxSalary": "241000.00"
+        },
+        {
+          "deptName": "Department_91",
+          "avgSalary": "190000.000000000000",
+          "maxSalary": "240000.00"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 35.735130310058594
+    }
+  },
+  {
+    "name": "TestAggregateSum",
+    "description": "聚合：计算部门总薪资支出",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "totalSalary",
+        "headCount",
+        "deptName"
+      ],
+      "rows": [
+        {
+          "totalSalary": "199000000.0",
+          "headCount": "1000",
+          "deptName": "Department_100"
+        },
+        {
+          "totalSalary": "198000000.0",
+          "headCount": "1000",
+          "deptName": "Department_99"
+        },
+        {
+          "totalSalary": "197000000.0",
+          "headCount": "1000",
+          "deptName": "Department_98"
+        },
+        {
+          "totalSalary": "196000000.0",
+          "headCount": "1000",
+          "deptName": "Department_97"
+        },
+        {
+          "totalSalary": "195000000.0",
+          "headCount": "1000",
+          "deptName": "Department_96"
+        },
+        {
+          "totalSalary": "194000000.0",
+          "headCount": "1000",
+          "deptName": "Department_95"
+        },
+        {
+          "totalSalary": "193000000.0",
+          "headCount": "1000",
+          "deptName": "Department_94"
+        },
+        {
+          "totalSalary": "192000000.0",
+          "headCount": "1000",
+          "deptName": "Department_93"
+        },
+        {
+          "totalSalary": "191000000.0",
+          "headCount": "1000",
+          "deptName": "Department_92"
+        },
+        {
+          "totalSalary": "190000000.0",
+          "headCount": "1000",
+          "deptName": "Department_91"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 38.21516036987305
+    },
+    "sql_result": {
+      "columns": [
+        "deptName",
+        "totalSalary",
+        "headCount"
+      ],
+      "rows": [
+        {
+          "deptName": "Department_100",
+          "totalSalary": "199000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_99",
+          "totalSalary": "198000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_98",
+          "totalSalary": "197000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_97",
+          "totalSalary": "196000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_96",
+          "totalSalary": "195000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_95",
+          "totalSalary": "194000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_94",
+          "totalSalary": "193000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_93",
+          "totalSalary": "192000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_92",
+          "totalSalary": "191000000.00",
+          "headCount": 1000
+        },
+        {
+          "deptName": "Department_91",
+          "totalSalary": "190000000.00",
+          "headCount": 1000
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 31.81290626525879
+    }
+  },
+  {
+    "name": "TestSubqueryExists",
+    "description": "子查询：EXISTS - 查询有项目的员工",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 16.421079635620117
+    }
+  },
+  {
+    "name": "TestSubqueryNotExists",
+    "description": "子查询：NOT EXISTS - 查询没有项目的员工",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 35.74562072753906
+    }
+  },
+  {
+    "name": "TestSubqueryScalar",
+    "description": "子查询：标量子查询 - 查询薪资高于平均水平的员工",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "salary"
+      ],
+      "rows": [
+        {
+          "firstName": "First100",
+          "lastName": "Last100",
+          "salary": "150000.00"
+        },
+        {
+          "firstName": "First101",
+          "lastName": "Last101",
+          "salary": "151000.00"
+        },
+        {
+          "firstName": "First102",
+          "lastName": "Last102",
+          "salary": "152000.00"
+        },
+        {
+          "firstName": "First103",
+          "lastName": "Last103",
+          "salary": "153000.00"
+        },
+        {
+          "firstName": "First104",
+          "lastName": "Last104",
+          "salary": "154000.00"
+        },
+        {
+          "firstName": "First105",
+          "lastName": "Last105",
+          "salary": "155000.00"
+        },
+        {
+          "firstName": "First106",
+          "lastName": "Last106",
+          "salary": "156000.00"
+        },
+        {
+          "firstName": "First107",
+          "lastName": "Last107",
+          "salary": "157000.00"
+        },
+        {
+          "firstName": "First108",
+          "lastName": "Last108",
+          "salary": "158000.00"
+        },
+        {
+          "firstName": "First109",
+          "lastName": "Last109",
+          "salary": "159000.00"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 16.104698181152344
+    }
+  },
+  {
+    "name": "TestGroupByMultiple",
+    "description": "多列分组：按部门和职位统计",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 500 Server Error: Internal Server Error for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "deptName",
+        "positionTitle",
+        "count",
+        "avgSalary"
+      ],
+      "rows": [
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_1",
+          "count": 100,
+          "avgSalary": "50000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_101",
+          "count": 100,
+          "avgSalary": "150000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_201",
+          "count": 100,
+          "avgSalary": "50000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_301",
+          "count": 100,
+          "avgSalary": "150000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_401",
+          "count": 100,
+          "avgSalary": "50000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_501",
+          "count": 100,
+          "avgSalary": "150000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_601",
+          "count": 100,
+          "avgSalary": "50000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_701",
+          "count": 100,
+          "avgSalary": "150000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_801",
+          "count": 100,
+          "avgSalary": "50000.000000000000"
+        },
+        {
+          "deptName": "Department_1",
+          "positionTitle": "Position_901",
+          "count": 100,
+          "avgSalary": "150000.000000000000"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 60.65106391906738
+    }
+  }
+]

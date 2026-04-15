@@ -1,0 +1,19 @@
+0000000000000000000000000000000000000000 bb6fcb21f2df7026e4329e47564cc4fa7a991807 xiaoyu940 <xiaoyu940@foxmail.com> 1774680697 +0800	commit (initial): Refactor module layout and stabilize SPARQL worker runtime
+bb6fcb21f2df7026e4329e47564cc4fa7a991807 1b57c561d6644d7c0215d200a8713874b1fccce7 xiaoyu940 <xiaoyu940@foxmail.com> 1774681726 +0800	commit: Remove .codex, .gitignore, and Cargo.lock from repository
+1b57c561d6644d7c0215d200a8713874b1fccce7 f0385e78e16d6579230cb66b6ea096adae4412cc xiaoyu940 <xiaoyu940@foxmail.com> 1774683332 +0800	commit: Remove repository metadata and lockfile artifacts
+f0385e78e16d6579230cb66b6ea096adae4412cc 07a7c24d7c92429d917420379f95069ad0b0996f xiaoyu940 <xiaoyu940@foxmail.com> 1774753336 +0800	commit: Sprint3: 整理测试目录结构，添加文档注释，删除冗余文件
+07a7c24d7c92429d917420379f95069ad0b0996f 69bee1b995560c079bd431e60d3baeb170f55994 xiaoyu940 <xiaoyu940@foxmail.com> 1774772306 +0800	commit: feat(sprint-3): Stabilize property path and subquery integration pipeline. fixed infinite recursion and variable mapping in UNIONS.
+69bee1b995560c079bd431e60d3baeb170f55994 2406339c257a1805840482b21efd5e25def660f4 xiaoyu940 <xiaoyu940@foxmail.com> 1774961084 +0800	commit: fix: 修复 SPARQL 解析器并统一所有测试案例到 Python
+2406339c257a1805840482b21efd5e25def660f4 6fa94511dc39d54ae45d4b1c18222fb90b7974cf xiaoyu940 <xiaoyu940@foxmail.com> 1774961201 +0800	commit: chore: 删除所有 Rust 测试案例文件
+6fa94511dc39d54ae45d4b1c18222fb90b7974cf f34b48ce9412ec622e80c4b800de9d2dc621aed9 xiaoyu940 <xiaoyu940@foxmail.com> 1775522177 +0800	commit: R2R改造
+f34b48ce9412ec622e80c4b800de9d2dc621aed9 b7b3a08ba448e85d5c92e3b796419df1909e74ae xiaoyu940 <xiaoyu940@foxmail.com> 1775528761 +0800	commit: 彻底删除ontop_mappings，仅保留R2RML映射方式
+b7b3a08ba448e85d5c92e3b796419df1909e74ae bbd537d044eb6abf24aa79805b90b878f1985333 xiaoyu940 <xiaoyu940@foxmail.com> 1775655144 +0800	commit: 92个案例通过
+bbd537d044eb6abf24aa79805b90b878f1985333 882cd6db199ea05ef4ee7aa29ecb7e7ef181b6ad xiaoyu940 <xiaoyu940@foxmail.com> 1775699765 +0800	commit: 全量代码提交：92案例通过及测试用例增强
+882cd6db199ea05ef4ee7aa29ecb7e7ef181b6ad 2c3cbb8448cf71ec9152da8a29c7ea005fd44d75 xiaoyu940 <xiaoyu940@foxmail.com> 1776154775 +0800	commit: Add CORS support for SPARQL HTTP endpoint
+2c3cbb8448cf71ec9152da8a29c7ea005fd44d75 3e2cd10bdda593578a9b16cdc5f10fde28404809 xiaoyu940 <xiaoyu940@foxmail.com> 1776160263 +0800	commit: Stabilize SPARQL HTTP execution and typed literal handling
+3e2cd10bdda593578a9b16cdc5f10fde28404809 75b72aac79a073b75ee180347ee2410115e374a8 xiaoyu940 <xiaoyu940@foxmail.com> 1776172885 +0800	commit: chore: checkpoint all current workspace changes
+75b72aac79a073b75ee180347ee2410115e374a8 5b0263f45cebbaaa80a3aaef71d1d2eaee955928 xiaoyu940 <xiaoyu940@foxmail.com> 1776213399 +0800	commit: fix: stabilize EXISTS filter parsing and prefix expansion
+5b0263f45cebbaaa80a3aaef71d1d2eaee955928 595432300fece9c31a8801e7e54ac487ce175efe xiaoyu940 <xiaoyu940@foxmail.com> 1776213399 +0800	filter-branch: rewrite
+0000000000000000000000000000000000000000 8fc93f7e185fc48f76b82c4aab7ea07fa19ab7df xiaoyu940 <xiaoyu940@foxmail.com> 1776223389 +0800	commit (initial): snapshot: initial import without history
+8fc93f7e185fc48f76b82c4aab7ea07fa19ab7df 0000000000000000000000000000000000000000 xiaoyu940 <xiaoyu940@foxmail.com> 1776223390 +0800	Branch: renamed refs/heads/snapshot-main to refs/heads/master
+0000000000000000000000000000000000000000 8fc93f7e185fc48f76b82c4aab7ea07fa19ab7df xiaoyu940 <xiaoyu940@foxmail.com> 1776223390 +0800	Branch: renamed refs/heads/snapshot-main to refs/heads/master

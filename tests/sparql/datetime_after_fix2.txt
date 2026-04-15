@@ -1,0 +1,234 @@
+
+================================================================================
+SPARQL HTTP 测试套件
+================================================================================
+
+================================================================================
+测试: TestNowFunction
+描述: 当前时间函数 NOW()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?currentTime
+        WHERE {
+            ?emp ex:first_name ?firstName .
+            BIND(NOW() AS ?currentTime)
+        }
+        LIMIT 5
+        
+结果: 5 行, 40.94 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", CURRENT_TIMESTAMP AS "currentTime"
+        FROM employees
+        LIMIT 5
+        
+结果: 5 行, 5.98 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestYearFunction
+描述: 年份提取 YEAR()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireYear
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND(YEAR(?hireDate) AS ?hireYear)
+        }
+        LIMIT 10
+        
+结果: 10 行, 37.75 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", EXTRACT(YEAR FROM hire_date) AS "hireYear"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.61 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestMonthFunction
+描述: 月份提取 MONTH()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireMonth
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND(MONTH(?hireDate) AS ?hireMonth)
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.95 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", EXTRACT(MONTH FROM hire_date) AS "hireMonth"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.21 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestDayFunction
+描述: 日期提取 DAY()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireDay
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND(DAY(?hireDate) AS ?hireDay)
+        }
+        LIMIT 10
+        
+结果: 10 行, 40.66 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", EXTRACT(DAY FROM hire_date) AS "hireDay"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 6.03 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestHoursFunction
+描述: 小时提取 HOURS()
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?checkInHour
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:check_in_time ?checkIn .
+            BIND(HOURS(?checkIn) AS ?checkInHour)
+        }
+        LIMIT 10
+        
+结果: 0 行, 0.00 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT e.first_name AS "firstName", EXTRACT(HOUR FROM a.check_in) AS "checkInHour"
+        FROM employees e
+        JOIN attendance a ON e.employee_id = a.employee_id
+        LIMIT 10
+        
+结果: 10 行, 9.07 ms
+
+[3/3] 对比结果...
+✗ 测试失败:
+  - SPARQL error: Translation failed: -- Translation Error: SQL generation failed: Unmapped variable: checkIn (tables: ["(SELECT 1)"], column_mapping_keys: [], available: [])
+
+================================================================================
+测试: TestDateDiff
+描述: 日期差计算 - 计算工龄
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?yearsOfService
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            BIND((YEAR(NOW()) - YEAR(?hireDate)) AS ?yearsOfService)
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.03 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName",
+               (EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM hire_date)) AS "yearsOfService"
+        FROM employees
+        LIMIT 10
+        
+结果: 10 行, 5.92 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试: TestDateComparison
+描述: 日期比较 - 查询2020年前入职的员工
+================================================================================
+
+[1/3] 执行 SPARQL 查询...
+SPARQL:
+
+        PREFIX ex: <http://example.org/>
+        SELECT ?firstName ?hireDate
+        WHERE {
+            ?emp ex:first_name ?firstName ;
+                 ex:hire_date ?hireDate .
+            FILTER(YEAR(?hireDate) < 2020)
+        }
+        LIMIT 10
+        
+结果: 10 行, 38.33 ms
+
+[2/3] 执行 SQL 基线查询...
+SQL:
+
+        SELECT first_name AS "firstName", hire_date AS "hireDate"
+        FROM employees
+        WHERE EXTRACT(YEAR FROM hire_date) < 2020
+        LIMIT 10
+        
+结果: 10 行, 7.05 ms
+
+[3/3] 对比结果...
+✓ 测试通过
+
+================================================================================
+测试汇总
+================================================================================
+总计: 7 个测试
+通过: 6 ✓
+失败: 1 ✗
+通过率: 85.7%
+
+详细结果已保存至: test_datetime_functions_results.json

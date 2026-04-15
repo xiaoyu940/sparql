@@ -1,0 +1,951 @@
+[SKIP MODULE] test_sprint9_p0_alternative_001
+[SKIP MODULE] test_sprint9_p0_complex_001
+[SKIP MODULE] test_sprint9_p0_inverse_001
+[SKIP MODULE] test_sprint9_p0_sequence_001
+[SKIP MODULE] test_sprint9_p2_path_modifiers_001
+
+================================================================================
+发现 92 个测试案例
+================================================================================
+
+
+[1/92] TestAggregationCount
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestAggregationCount
+
+[2/92] TestBasicJoin
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 5 行
+  执行 SQL 查询...
+  ✓ SQL 返回 5 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBasicJoin
+
+[3/92] TestFilterEquals
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestFilterEquals
+
+[4/92] TestFilterGreaterThan
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 84500 行
+  执行 SQL 查询...
+  ✓ SQL 返回 84500 行
+  比对结果...
+  ✓ 测试通过
+✓ TestFilterGreaterThan
+
+[5/92] TestFilterLessThan
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 5000 行
+  执行 SQL 查询...
+  ✓ SQL 返回 5000 行
+  比对结果...
+  ✓ 测试通过
+✓ TestFilterLessThan
+
+[6/92] TestHavingBasic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestHavingBasic
+
+[7/92] TestHavingMultiCondition
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestHavingMultiCondition
+
+[8/92] TestOrderByAsc
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestOrderByAsc
+
+[9/92] TestOrderByDesc
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestOrderByDesc
+
+[10/92] TestOrderByWithLimit
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestOrderByWithLimit
+
+[11/92] TestAskBasic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestAskBasic
+
+[12/92] TestAskPatternNotExist
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✗ 测试失败:
+    - 数据不匹配[result]: SPARQL='True', SQL='False'
+✗ TestAskPatternNotExist
+  - 数据不匹配[result]: SPARQL='True', SQL='False'
+
+[13/92] TestAskWithFilter
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestAskWithFilter
+
+[14/92] TestAskWithJoin
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✗ 测试失败:
+    - 数据不匹配[result]: SPARQL='True', SQL='False'
+✗ TestAskWithJoin
+  - 数据不匹配[result]: SPARQL='True', SQL='False'
+
+[15/92] TestConstructBasicTriple
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestConstructBasicTriple
+
+[16/92] TestConstructMultiplePredicates
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 5 行
+  执行 SQL 查询...
+  ✓ SQL 返回 5 行
+  比对结果...
+  ✓ 测试通过
+✓ TestConstructMultiplePredicates
+
+[17/92] TestConstructWithFilter
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 74500 行
+  执行 SQL 查询...
+  ✓ SQL 返回 74500 行
+  比对结果...
+  ✓ 测试通过
+✓ TestConstructWithFilter
+
+[18/92] TestConstructWithLimit
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestConstructWithLimit
+
+[19/92] TestDescribeResource
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 4 行
+  执行 SQL 查询...
+  ✓ SQL 返回 4 行
+  比对结果...
+  ✓ 测试通过
+✓ TestDescribeResource
+
+[20/92] TestDescribeVariable
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestDescribeVariable
+
+[21/92] TestDescribeWithLimit
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 3 行
+  执行 SQL 查询...
+  ✓ SQL 返回 3 行
+  比对结果...
+  ✓ 测试通过
+✓ TestDescribeWithLimit
+
+[22/92] TestBindAbs
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindAbs
+
+[23/92] TestBindArithmetic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindArithmetic
+
+[24/92] TestBindCeilFloor
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindCeilFloor
+
+[25/92] TestBindMod
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindMod
+
+[26/92] TestBindRand
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindRand
+
+[27/92] TestBindRound
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindRound
+
+[28/92] TestBindConcat
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindConcat
+
+[29/92] TestBindReplace
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindReplace
+
+[30/92] TestBindStrlen
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindStrlen
+
+[31/92] TestBindSubstring
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindSubstring
+
+[32/92] TestBindUpperLower
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestBindUpperLower
+
+[33/92] TestExistsBasic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestExistsBasic
+
+[34/92] TestExistsNested
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestExistsNested
+
+[35/92] TestExistsWithFilter
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestExistsWithFilter
+
+[36/92] TestExistsWithValues
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 3 行
+  执行 SQL 查询...
+  ✓ SQL 返回 3 行
+  比对结果...
+  ✓ 测试通过
+✓ TestExistsWithValues
+
+[37/92] TestExistsAndNotExists
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestExistsAndNotExists
+
+[38/92] TestNotExistsBasic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestNotExistsBasic
+
+[39/92] TestNotExistsMultiple
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestNotExistsMultiple
+
+[40/92] TestNotExistsWithAggregate
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestNotExistsWithAggregate
+
+[41/92] TestNotExistsWithFilter
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestNotExistsWithFilter
+
+[42/92] TestGeoSparqlBuffer
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 2 行
+  执行 SQL 查询...
+  ✓ SQL 返回 2 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeoSparqlBuffer
+
+[43/92] TestGeoSparqlContains
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 2 行
+  执行 SQL 查询...
+  ✓ SQL 返回 2 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeoSparqlContains
+
+[44/92] TestGeoSparqlDistance
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 4 行
+  执行 SQL 查询...
+  ✓ SQL 返回 4 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeoSparqlDistance
+
+[45/92] TestGeoSparqlIntersects
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 4 行
+  执行 SQL 查询...
+  ✓ SQL 返回 4 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeoSparqlIntersects
+
+[46/92] TestGeoSparqlOverlaps
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 4 行
+  执行 SQL 查询...
+  ✓ SQL 返回 4 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeoSparqlOverlaps
+
+[47/92] TestGeoSparqlWithin
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 4 行
+  执行 SQL 查询...
+  ✓ SQL 返回 4 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeoSparqlWithin
+
+[48/92] TestMinusBasic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestMinusBasic
+
+[49/92] TestMinusMultiplePatterns
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestMinusMultiplePatterns
+
+[50/92] TestMinusWithAggregate
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestMinusWithAggregate
+
+[51/92] TestMinusWithSharedVar
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestMinusWithSharedVar
+
+[52/92] TestSubQueryBasic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestSubQueryBasic
+
+[53/92] TestSubQueryDerivedTable
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestSubQueryDerivedTable
+
+[54/92] TestSubQueryWithFilter
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestSubQueryWithFilter
+
+[55/92] TestCorrelatedSubQueryExists
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestCorrelatedSubQueryExists
+
+[56/92] TestCorrelatedSubQueryLateral
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestCorrelatedSubQueryLateral
+
+[57/92] TestNestedSubQuery
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestNestedSubQuery
+
+[58/92] TestValuesLargeSet
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesLargeSet
+
+[59/92] TestValuesNumeric
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 5 行
+  执行 SQL 查询...
+  ✓ SQL 返回 5 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesNumeric
+
+[60/92] TestValuesSingleVar
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 3 行
+  执行 SQL 查询...
+  ✓ SQL 返回 3 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesSingleVar
+
+[61/92] TestValuesWithFilter
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 3 行
+  执行 SQL 查询...
+  ✓ SQL 返回 3 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesWithFilter
+
+[62/92] TestValuesEmpty
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 0 行
+  执行 SQL 查询...
+  ✓ SQL 返回 0 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesEmpty
+
+[63/92] TestValuesJoinPattern
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesJoinPattern
+
+[64/92] TestValuesMixedTypes
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 0 行
+  执行 SQL 查询...
+  ✓ SQL 返回 0 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesMixedTypes
+
+[65/92] TestValuesMultiVar
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 0 行
+  执行 SQL 查询...
+  ✓ SQL 返回 0 行
+  比对结果...
+  ✓ 测试通过
+✓ TestValuesMultiVar
+
+[66/92] TestGeofBuffer
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 4 行
+  执行 SQL 查询...
+  ✓ SQL 返回 4 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeofBuffer
+
+[67/92] TestGeofBufferWithUnit
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 0 行
+  执行 SQL 查询...
+  ✓ SQL 返回 0 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeofBufferWithUnit
+
+[68/92] TestGeofDistance
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+[S9-P1-2] 生成 SQL: /* DEBUG tables: ["stores"] */ /* DEBUG vars: [dist->col_dist), wkt->col_wkt), store->col_store), col_dist->col_col_dist)] */ /* DEBUG available: [col_store:sto.store_id, col_wkt:sto.geometry, col_store:sto.store_id, col_wkt:sto.geometry, col_dist:ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326)), dist:ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326)), store:sto.store_id, wkt:sto.geometry, dist:ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326)), store:sto.store_id, wkt:sto.geometry, store:sto.store_id, dist:ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326))] */ SELECT sto.store_id AS store, ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326)) AS dist FROM stores AS sto WHERE ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326)) < 10000 AND ST_Distance(ST_SetSRID(sto.geometry, 4326), ST_GeomFromText('POINT(116.4074 39.9042)', 4326)) < 10000 ORDER BY sto.store_id ASC LIMIT 10
+  ✓ SPARQL 返回 2 行
+  执行 SQL 查询...
+  ✓ SQL 返回 2 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeofDistance
+
+[69/92] TestGeofDistanceWithVar
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestGeofDistanceWithVar
+
+[70/92] TestDateArithmetic
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 46629 行
+  执行 SQL 查询...
+  ✓ SQL 返回 46629 行
+  比对结果...
+  ✓ 测试通过
+✓ TestDateArithmetic
+
+[71/92] TestDateTimeComponents
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestDateTimeComponents
+
+[72/92] TestNowFunction
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+[S9-P2-3] 生成 SQL: /* DEBUG tables: ["(SELECT 1)"] */ /* DEBUG vars: [currenttime->col_currenttime), col_currenttime->col_col_currenttime)] */ /* DEBUG available: [col_currenttime:CURRENT_TIMESTAMP, currenttime:CURRENT_TIMESTAMP] */ SELECT CURRENT_TIMESTAMP AS currenttime FROM (SELECT 1) AS t0
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestNowFunction
+
+[73/92] TestTimezoneFunctions
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestTimezoneFunctions
+
+[74/92] TestYearExtraction
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestYearExtraction
+
+[75/92] TestAgg001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestAgg001
+
+[76/92] TestAgg002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestAgg002
+
+[77/92] TestAgg003
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 1 行
+  执行 SQL 查询...
+  ✓ SQL 返回 1 行
+  比对结果...
+  ✓ 测试通过
+✓ TestAgg003
+
+[78/92] TestEdge001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestEdge001
+
+[79/92] TestEdge002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 0 行
+  执行 SQL 查询...
+  ✓ SQL 返回 0 行
+  比对结果...
+  ✓ 测试通过
+✓ TestEdge002
+
+[80/92] TestFil001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 84500 行
+  执行 SQL 查询...
+  ✓ SQL 返回 84500 行
+  比对结果...
+  ✓ 测试通过
+✓ TestFil001
+
+[81/92] TestFil002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 0 行
+  执行 SQL 查询...
+  ✓ SQL 返回 0 行
+  比对结果...
+  ✓ 测试通过
+✓ TestFil002
+
+[82/92] TestHaving001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestHaving001
+
+[83/92] TestHaving002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestHaving002
+
+[84/92] TestJoin001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestJoin001
+
+[85/92] TestJoin002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestJoin002
+
+[86/92] TestJoin003
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestJoin003
+
+[87/92] TestMap001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestMap001
+
+[88/92] TestMap002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestMap002
+
+[89/92] TestOrd001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestOrd001
+
+[90/92] TestOrd002
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestOrd002
+
+[91/92] TestOrd003
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+  ✓ SPARQL 返回 10 行
+  执行 SQL 查询...
+  ✓ SQL 返回 10 行
+  比对结果...
+  ✓ 测试通过
+✓ TestOrd003
+
+[92/92] TestPerf001
+--------------------------------------------------------------------------------
+  执行 SPARQL 查询...
+翻译耗时: 111.73ms
+  ✓ SPARQL 返回 100 行
+  执行 SQL 查询...
+  ✓ SQL 返回 100 行
+  比对结果...
+  ✓ 测试通过
+✓ TestPerf001
+
+================================================================================
+测试汇总
+================================================================================
+总计: 92
+通过: 90 ✓
+失败: 2 ✗
+================================================================================
+
+失败的测试:
+  ✗ TestAskPatternNotExist
+    - 数据不匹配[result]: SPARQL='True', SQL='False'
+  ✗ TestAskWithJoin
+    - 数据不匹配[result]: SPARQL='True', SQL='False'

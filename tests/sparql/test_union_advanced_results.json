@@ -1,0 +1,392 @@
+[
+  {
+    "name": "TestUnionTwoPatterns",
+    "description": "UNION：查询Engineering或Sales部门的员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "deptName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 27.58622169494629
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "deptName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 22.78590202331543
+    }
+  },
+  {
+    "name": "TestValuesBlock",
+    "description": "VALUES：内联数据 - 查询特定部门ID的员工",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "dept"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "dept": 2
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "dept": 3
+        },
+        {
+          "firstName": "First100",
+          "lastName": "Last100",
+          "dept": 1
+        },
+        {
+          "firstName": "First101",
+          "lastName": "Last101",
+          "dept": 2
+        },
+        {
+          "firstName": "First102",
+          "lastName": "Last102",
+          "dept": 3
+        },
+        {
+          "firstName": "First200",
+          "lastName": "Last200",
+          "dept": 1
+        },
+        {
+          "firstName": "First201",
+          "lastName": "Last201",
+          "dept": 2
+        },
+        {
+          "firstName": "First202",
+          "lastName": "Last202",
+          "dept": 3
+        },
+        {
+          "firstName": "First300",
+          "lastName": "Last300",
+          "dept": 1
+        },
+        {
+          "firstName": "First301",
+          "lastName": "Last301",
+          "dept": 2
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 7.163763046264648
+    }
+  },
+  {
+    "name": "TestInFilter",
+    "description": "IN 过滤器：查询特定职位的员工",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "positionTitle"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 9.74273681640625
+    }
+  },
+  {
+    "name": "TestCoalesce",
+    "description": "COALESCE：处理NULL值 - 员工电话或邮箱",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "contact"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "contact": "555-0001"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "contact": "555-0002"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "contact": "555-0003"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "contact": "555-0004"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "contact": "555-0005"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "contact": "555-0006"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "contact": "555-0007"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "contact": "555-0008"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "contact": "555-0009"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "contact": "555-0010"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 5.457401275634766
+    }
+  },
+  {
+    "name": "TestIfExpression",
+    "description": "IF条件表达式：根据薪资等级分类",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "salaryLevel"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First7",
+          "lastName": "Last7",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First9",
+          "lastName": "Last9",
+          "salaryLevel": "Low"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10",
+          "salaryLevel": "Low"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 6.453275680541992
+    }
+  },
+  {
+    "name": "TestMinusPattern",
+    "description": "MINUS：排除特定模式 - 查询有薪资记录但没有项目的员工",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName"
+      ],
+      "rows": [],
+      "row_count": 0,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 715.9357070922852
+    }
+  },
+  {
+    "name": "TestServicePattern",
+    "description": "SERVICE：跨数据源查询（模拟）",
+    "passed": false,
+    "errors": [
+      "SPARQL error: SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql"
+    ],
+    "sparql_result": {
+      "columns": [],
+      "rows": [],
+      "row_count": 0,
+      "passed": false,
+      "error": "SPARQL execution error: 400 Client Error: Bad Request for url: http://localhost:5820/sparql",
+      "execution_time_ms": 0.0
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5"
+        },
+        {
+          "firstName": "First6",
+          "lastName": "Last6"
+        },
+        {
+          "firstName": "First8",
+          "lastName": "Last8"
+        },
+        {
+          "firstName": "First10",
+          "lastName": "Last10"
+        },
+        {
+          "firstName": "First11",
+          "lastName": "Last11"
+        },
+        {
+          "firstName": "First13",
+          "lastName": "Last13"
+        },
+        {
+          "firstName": "First15",
+          "lastName": "Last15"
+        },
+        {
+          "firstName": "First16",
+          "lastName": "Last16"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 6.070613861083984
+    }
+  }
+]

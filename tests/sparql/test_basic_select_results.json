@@ -1,0 +1,567 @@
+[
+  {
+    "name": "TestBasicSelectAllEmployees",
+    "description": "基础查询：获取所有员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "emp",
+        "firstName",
+        "lastName"
+      ],
+      "rows": [
+        {
+          "emp": "1",
+          "firstName": "First1",
+          "lastName": "Last1"
+        },
+        {
+          "emp": "2",
+          "firstName": "First2",
+          "lastName": "Last2"
+        },
+        {
+          "emp": "3",
+          "firstName": "First3",
+          "lastName": "Last3"
+        },
+        {
+          "emp": "4",
+          "firstName": "First4",
+          "lastName": "Last4"
+        },
+        {
+          "emp": "5",
+          "firstName": "First5",
+          "lastName": "Last5"
+        },
+        {
+          "emp": "6",
+          "firstName": "First6",
+          "lastName": "Last6"
+        },
+        {
+          "emp": "7",
+          "firstName": "First7",
+          "lastName": "Last7"
+        },
+        {
+          "emp": "8",
+          "firstName": "First8",
+          "lastName": "Last8"
+        },
+        {
+          "emp": "9",
+          "firstName": "First9",
+          "lastName": "Last9"
+        },
+        {
+          "emp": "10",
+          "firstName": "First10",
+          "lastName": "Last10"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 17.34328269958496
+    },
+    "sql_result": {
+      "columns": [
+        "emp",
+        "firstName",
+        "lastName"
+      ],
+      "rows": [
+        {
+          "emp": 1,
+          "firstName": "First1",
+          "lastName": "Last1"
+        },
+        {
+          "emp": 2,
+          "firstName": "First2",
+          "lastName": "Last2"
+        },
+        {
+          "emp": 3,
+          "firstName": "First3",
+          "lastName": "Last3"
+        },
+        {
+          "emp": 4,
+          "firstName": "First4",
+          "lastName": "Last4"
+        },
+        {
+          "emp": 5,
+          "firstName": "First5",
+          "lastName": "Last5"
+        },
+        {
+          "emp": 6,
+          "firstName": "First6",
+          "lastName": "Last6"
+        },
+        {
+          "emp": 7,
+          "firstName": "First7",
+          "lastName": "Last7"
+        },
+        {
+          "emp": 8,
+          "firstName": "First8",
+          "lastName": "Last8"
+        },
+        {
+          "emp": 9,
+          "firstName": "First9",
+          "lastName": "Last9"
+        },
+        {
+          "emp": 10,
+          "firstName": "First10",
+          "lastName": "Last10"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 23.69236946105957
+    }
+  },
+  {
+    "name": "TestSelectSpecificColumns",
+    "description": "查询特定属性：员工姓名和邮箱",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "email"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "email": "employee1@company.com"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "email": "employee2@company.com"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "email": "employee3@company.com"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "email": "employee4@company.com"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "email": "employee5@company.com"
+        }
+      ],
+      "row_count": 5,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 12.008428573608398
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "email"
+      ],
+      "rows": [
+        {
+          "firstName": "First1",
+          "lastName": "Last1",
+          "email": "employee1@company.com"
+        },
+        {
+          "firstName": "First2",
+          "lastName": "Last2",
+          "email": "employee2@company.com"
+        },
+        {
+          "firstName": "First3",
+          "lastName": "Last3",
+          "email": "employee3@company.com"
+        },
+        {
+          "firstName": "First4",
+          "lastName": "Last4",
+          "email": "employee4@company.com"
+        },
+        {
+          "firstName": "First5",
+          "lastName": "Last5",
+          "email": "employee5@company.com"
+        }
+      ],
+      "row_count": 5,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 6.073713302612305
+    }
+  },
+  {
+    "name": "TestSelectWithOrderBy",
+    "description": "排序查询：按入职日期排序",
+    "passed": false,
+    "errors": [
+      "Value mismatch for 'firstName': SPARQL='First32850', SQL='First25550'",
+      "Value mismatch for 'lastName': SPARQL='Last32850', SQL='Last25550'"
+    ],
+    "sparql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "hireDate"
+      ],
+      "rows": [
+        {
+          "firstName": "First32850",
+          "lastName": "Last32850",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First47450",
+          "lastName": "Last47450",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First29200",
+          "lastName": "Last29200",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First7300",
+          "lastName": "Last7300",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First10950",
+          "lastName": "Last10950",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First40150",
+          "lastName": "Last40150",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First14600",
+          "lastName": "Last14600",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First25550",
+          "lastName": "Last25550",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First3650",
+          "lastName": "Last3650",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First58400",
+          "lastName": "Last58400",
+          "hireDate": "2026-04-07"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 66.38598442077637
+    },
+    "sql_result": {
+      "columns": [
+        "firstName",
+        "lastName",
+        "hireDate"
+      ],
+      "rows": [
+        {
+          "firstName": "First25550",
+          "lastName": "Last25550",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First36500",
+          "lastName": "Last36500",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First21900",
+          "lastName": "Last21900",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First7300",
+          "lastName": "Last7300",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First10950",
+          "lastName": "Last10950",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First32850",
+          "lastName": "Last32850",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First14600",
+          "lastName": "Last14600",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First18250",
+          "lastName": "Last18250",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First3650",
+          "lastName": "Last3650",
+          "hireDate": "2026-04-07"
+        },
+        {
+          "firstName": "First40150",
+          "lastName": "Last40150",
+          "hireDate": "2026-04-07"
+        }
+      ],
+      "row_count": 10,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 19.631147384643555
+    }
+  },
+  {
+    "name": "TestSelectDistinctDepartments",
+    "description": "去重查询：获取所有不重复的部门",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "deptName"
+      ],
+      "rows": [
+        {
+          "deptName": "Department_1"
+        },
+        {
+          "deptName": "Department_10"
+        },
+        {
+          "deptName": "Department_100"
+        },
+        {
+          "deptName": "Department_11"
+        },
+        {
+          "deptName": "Department_12"
+        },
+        {
+          "deptName": "Department_13"
+        },
+        {
+          "deptName": "Department_14"
+        },
+        {
+          "deptName": "Department_15"
+        },
+        {
+          "deptName": "Department_16"
+        },
+        {
+          "deptName": "Department_17"
+        },
+        {
+          "deptName": "Department_18"
+        },
+        {
+          "deptName": "Department_19"
+        },
+        {
+          "deptName": "Department_2"
+        },
+        {
+          "deptName": "Department_20"
+        },
+        {
+          "deptName": "Department_21"
+        },
+        {
+          "deptName": "Department_22"
+        },
+        {
+          "deptName": "Department_23"
+        },
+        {
+          "deptName": "Department_24"
+        },
+        {
+          "deptName": "Department_25"
+        },
+        {
+          "deptName": "Department_26"
+        }
+      ],
+      "row_count": 20,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 15.115976333618164
+    },
+    "sql_result": {
+      "columns": [
+        "deptName"
+      ],
+      "rows": [
+        {
+          "deptName": "Department_1"
+        },
+        {
+          "deptName": "Department_10"
+        },
+        {
+          "deptName": "Department_100"
+        },
+        {
+          "deptName": "Department_11"
+        },
+        {
+          "deptName": "Department_12"
+        },
+        {
+          "deptName": "Department_13"
+        },
+        {
+          "deptName": "Department_14"
+        },
+        {
+          "deptName": "Department_15"
+        },
+        {
+          "deptName": "Department_16"
+        },
+        {
+          "deptName": "Department_17"
+        },
+        {
+          "deptName": "Department_18"
+        },
+        {
+          "deptName": "Department_19"
+        },
+        {
+          "deptName": "Department_2"
+        },
+        {
+          "deptName": "Department_20"
+        },
+        {
+          "deptName": "Department_21"
+        },
+        {
+          "deptName": "Department_22"
+        },
+        {
+          "deptName": "Department_23"
+        },
+        {
+          "deptName": "Department_24"
+        },
+        {
+          "deptName": "Department_25"
+        },
+        {
+          "deptName": "Department_26"
+        }
+      ],
+      "row_count": 20,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 6.114006042480469
+    }
+  },
+  {
+    "name": "TestSelectCountEmployees",
+    "description": "计数查询：统计员工总数",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "totalEmployees"
+      ],
+      "rows": [
+        {
+          "totalEmployees": "100000"
+        }
+      ],
+      "row_count": 1,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 21.62957191467285
+    },
+    "sql_result": {
+      "columns": [
+        "totalEmployees"
+      ],
+      "rows": [
+        {
+          "totalEmployees": 100000
+        }
+      ],
+      "row_count": 1,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 11.37542724609375
+    }
+  },
+  {
+    "name": "TestAskEmployeeExists",
+    "description": "ASK查询：检查是否存在员工",
+    "passed": true,
+    "errors": [],
+    "sparql_result": {
+      "columns": [
+        "result"
+      ],
+      "rows": [
+        {
+          "result": true
+        }
+      ],
+      "row_count": 1,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 1545.9163188934326
+    },
+    "sql_result": {
+      "columns": [
+        "result"
+      ],
+      "rows": [
+        {
+          "result": true
+        }
+      ],
+      "row_count": 1,
+      "passed": true,
+      "error": null,
+      "execution_time_ms": 7.19904899597168
+    }
+  }
+]

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/yuxiaoyu/rs_ontop_core/tests/python/test_cases/test_sprint9_p0_inverse_001.py", line 128, in <module>
+    framework = SparqlTestFramework(db_config)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Can't instantiate abstract class TestCaseBase without an implementation for abstract methods 'sparql_query', 'sql_query'
