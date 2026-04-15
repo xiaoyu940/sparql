@@ -2082,11 +2082,15 @@ fn substitute_bind_aliases(expr: Expr, bind_alias_exprs: &HashMap<String, Expr>)
                 } else {
                     // 不在 IRI 内
                     if c == b'<' && paren_depth == 0 {
-                        if !in_iri && filter[i..].starts_with(op) {
-                            return Some(i);
-                        }
                         let next = bytes.get(i + 1).copied().unwrap_or(b' ');
-                        if !is_comparison_op || next.is_ascii_alphabetic() {
+                        let iri_start = next.is_ascii_alphabetic();
+                        if !in_iri && filter[i..].starts_with(op) {
+                            // For comparison parsing, skip "<" that starts an IRI like <http://...>.
+                            if !is_comparison_op || !iri_start {
+                                return Some(i);
+                            }
+                        }
+                        if !is_comparison_op || iri_start {
                             in_iri = true;
                         }
                     } else if c == b'(' {
