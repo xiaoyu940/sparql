@@ -7,3 +7,5 @@ __pycache__/
 .pytest_cache/
 src.zip
 src (2).zip
+.git.backup_*/
+_tmp_*.sh
