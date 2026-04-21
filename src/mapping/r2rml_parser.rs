@@ -78,6 +78,7 @@ impl MappingConverter for R2RmlTriplesMap {
                 predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
                 table_name: table_name.clone(),
                 subject_template: self.subject_map.template.clone().or(self.subject_map.column.clone()),
+                object_constant: Some(_class_iri.clone()),
                 position_to_column,
                 // Notice: In the current design, the object of a class assertion is known (the class),
                 // the `position_to_column` is empty, which implies we should either adapt MappingRule to store `object_constant`, 
@@ -100,6 +101,7 @@ impl MappingConverter for R2RmlTriplesMap {
                         predicate: pred.clone(),
                         table_name: table_name.clone(),
                         subject_template: self.subject_map.template.clone().or(self.subject_map.column.clone()),
+                        object_constant: None,
                         position_to_column,
                     });
                 }

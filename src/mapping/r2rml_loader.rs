@@ -8,7 +8,7 @@
 //! - 验证映射完整性
 //! - 缓存映射以提高性能
 
-use crate::mapping::{MappingRule, MappingStore};
+use crate::mapping::{MappingRule, MappingStore, OntologyClass, OntologyProperty, PropertyType};
 use crate::mapping::r2rml_parser::{parse_r2rml, MappingConverter, R2RmlError};
 use crate::SpiClient;
 use std::collections::HashMap;
@@ -25,6 +25,72 @@ const R2RML_TTL_CONTENT_COLUMN: &str = "ttl_content";
 const TEST_EMPLOYEES_TABLE: &str = "employees";
 const TEST_DEPARTMENTS_TABLE: &str = "departments";
 const TEST_FIRST_NAME_PREDICATE: &str = "http://example.org/employee#firstName";
+
+
+const RDF_TYPE_PREDICATE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+
+fn infer_tbox_from_triples_maps(
+    triples_maps: &[crate::mapping::r2rml_parser::R2RmlTriplesMap],
+    store: &mut MappingStore,
+) {
+    for tm in triples_maps {
+        // infer classes from rr:class in subject map
+        for class_iri in &tm.subject_map.class {
+            if class_iri.is_empty() {
+                continue;
+            }
+            if !store.classes.contains_key(class_iri) {
+                store.add_class(OntologyClass {
+                    iri: class_iri.clone(),
+                    label: None,
+                    comment: None,
+                    parent_classes: vec![],
+                });
+            }
+        }
+
+        // infer properties from predicate-object maps
+        for pom in &tm.predicate_object_maps {
+            for pred in &pom.predicates {
+                if pred.is_empty() || pred == RDF_TYPE_PREDICATE {
+                    continue;
+                }
+
+                let mut inferred = PropertyType::Datatype;
+                for obj in &pom.object_maps {
+                    if obj.template.is_some() {
+                        inferred = PropertyType::Object;
+                        break;
+                    }
+                    if let Some(c) = &obj.constant {
+                        if c.starts_with("http://") || c.starts_with("https://") {
+                            inferred = PropertyType::Object;
+                            break;
+                        }
+                    }
+                }
+
+                if let Some(existing) = store.properties.get_mut(pred) {
+                    if inferred == PropertyType::Object {
+                        existing.prop_type = PropertyType::Object;
+                    }
+                } else {
+                    store.add_property(OntologyProperty {
+                        iri: pred.clone(),
+                        label: None,
+                        comment: None,
+                        prop_type: inferred,
+                        is_functional: false,
+                        domain: None,
+                        range: None,
+                        parent_properties: vec![],
+                        inverse_of: None,
+                    });
+                }
+            }
+        }
+    }
+}
 
 /// R2RML 加载错误
 #[derive(Error, Debug)]
@@ -82,6 +148,9 @@ impl R2RmlLoader {
         let triples_maps = parse_r2rml(ttl_content)?;
 
         let mut store = MappingStore::new();
+
+        // 从 R2RML 结构推导基础 TBox（class/property）
+        infer_tbox_from_triples_maps(&triples_maps, &mut store);
 
         // 转换每个 TriplesMap 为内部 MappingRule
         for tm in triples_maps {
@@ -182,6 +251,18 @@ impl R2RmlLoader {
                             store.insert_mapping(r);
                         }
                     }
+                    for (_, class) in partial_store.classes {
+                        store.add_class(class);
+                    }
+                    for (_, prop) in partial_store.properties {
+                        if let Some(existing) = store.properties.get_mut(&prop.iri) {
+                            if prop.prop_type == PropertyType::Object {
+                                existing.prop_type = PropertyType::Object;
+                            }
+                        } else {
+                            store.add_property(prop);
+                        }
+                    }
                 }
             }
             Err(e) => {
@@ -203,11 +284,10 @@ impl R2RmlLoader {
     /// - 每个 position_to_column 至少有一个条目
     fn validate_mappings(&self, store: &MappingStore) -> Result<(), R2RmlLoaderError> {
         let mut errors = Vec::new();
-        const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
         for (predicate, rules) in &store.mappings {
             // 跳过 rdf:type 类型映射的验证
-            if predicate == RDF_TYPE {
+            if predicate == RDF_TYPE_PREDICATE {
                 continue;
             }
             

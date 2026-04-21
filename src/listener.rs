@@ -1,6 +1,7 @@
-use pgrx::bgworkers::*;
+﻿use pgrx::bgworkers::*;
 use pgrx::prelude::*;
 use regex::Regex;
+use spargebra::Query;
 use std::net::ToSocketAddrs;
 use std::time::Duration;
 use tiny_http::{Header, Method, Response, Server, StatusCode};
@@ -62,6 +63,7 @@ pub extern "C-unwind" fn ontop_sparql_bgworker_main(_arg: pg_sys::Datum) {
         worker_id,
         listen_port
     );
+
 
     let mut consecutive_errors = 0;
     let max_consecutive_errors = 10;
@@ -148,6 +150,115 @@ pub extern "C-unwind" fn ontop_sparql_bgworker_main(_arg: pg_sys::Datum) {
                     continue;
                 }
 
+                if path.starts_with("/sql") {
+                    let mut sql_query = String::new();
+
+                    if method == Method::Post {
+                        let mut content = String::new();
+                        let _ = request.as_reader().read_to_string(&mut content);
+                        if content.starts_with("query=") {
+                            let mut decoded_query = None;
+                            for (k, v) in url::form_urlencoded::parse(content.as_bytes()) {
+                                if k == "query" {
+                                    decoded_query = Some(v.into_owned());
+                                    break;
+                                }
+                            }
+                            if let Some(q) = decoded_query {
+                                sql_query = q;
+                            } else {
+                                sql_query = content;
+                            }
+                        } else {
+                            sql_query = content;
+                        }
+                    } else if method == Method::Get {
+                        if let Ok(url) = Url::parse(&format!("http://localhost{}", path)) {
+                            for (key, val) in url.query_pairs() {
+                                if key == "query" {
+                                    sql_query = val.to_string();
+                                }
+                            }
+                        }
+                    }
+
+                    if sql_query.trim().is_empty() {
+                        let _ = request.respond(with_cors_headers(
+                            Response::from_string(r#"{"error":"Missing query parameter"}"#)
+                                .with_status_code(StatusCode(400)),
+                        ));
+                        continue;
+                    }
+
+                    if let Err(e) = validate_query_stability(&sql_query) {
+                        let error_response = serde_json::json!({
+                            "error": e,
+                            "status_code": 400,
+                            "query": sql_query,
+                        });
+                        let _ = request.respond(with_cors_headers(
+                            Response::from_string(error_response.to_string())
+                                .with_status_code(StatusCode(400)),
+                        ));
+                        continue;
+                    }
+
+                    let sql_for_worker = sql_query.clone();
+                    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+                        BackgroundWorker::transaction(|| execute_raw_sql_query(&sql_for_worker))
+                    }));
+
+                    match result {
+                        Ok(Ok(payload)) => {
+                            let response = Response::from_string(payload.to_string())
+                                .with_chunked_threshold(0)
+                                .with_header(
+                                    tiny_http::Header::from_bytes(
+                                        &b"Content-Type"[..],
+                                        &b"application/json; charset=utf-8"[..],
+                                    )
+                                    .expect("should create header"),
+                                );
+                            let _ = request.respond(with_cors_headers(response));
+                        }
+                        Ok(Err(e)) => {
+                            let error_msg = format!("SQL error: {}", e);
+                            let sqlstate = extract_sqlstate(&error_msg);
+                            let status_code = determine_error_status_code(&error_msg, sqlstate.as_deref());
+                            let error_response = build_error_response(
+                                &error_msg,
+                                status_code,
+                                &sql_query,
+                                sqlstate.as_deref(),
+                            );
+                            let _ = request.respond(with_cors_headers(
+                                Response::from_string(error_response.to_string())
+                                    .with_status_code(StatusCode(status_code)),
+                            ));
+                        }
+                        Err(panic_info) => {
+                            let error_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                                format!("Internal SQL error: {}", s)
+                            } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                                format!("Internal SQL error: {}", s)
+                            } else {
+                                "Internal SQL error: Unknown panic".to_string()
+                            };
+                            let error_response = build_error_response(
+                                &error_msg,
+                                500,
+                                &sql_query,
+                                Some("XX000"),
+                            );
+                            let _ = request.respond(with_cors_headers(
+                                Response::from_string(error_response.to_string())
+                                    .with_status_code(StatusCode(500)),
+                            ));
+                        }
+                    }
+                    continue;
+                }
+
                 if path.starts_with("/sparql") {
                     let mut sparql_query = String::new();
 
@@ -195,6 +306,21 @@ pub extern "C-unwind" fn ontop_sparql_bgworker_main(_arg: pg_sys::Datum) {
                         let error_response = serde_json::json!({
                             "error": e,
                             "status_code": 400,
+                            "query": sparql_query
+                        });
+                        let _ = request.respond(with_cors_headers(
+                            Response::from_string(error_response.to_string())
+                                .with_status_code(StatusCode(400)),
+                        ));
+                        continue;
+                    }
+
+                    if let Err(e) = validate_sparql_syntax(&sparql_query) {
+                        log!("rs-ontop-core: {}", e);
+                        let error_response = serde_json::json!({
+                            "error": e,
+                            "status_code": 400,
+                            "code": "SPARQL_SYNTAX_ERROR",
                             "query": sparql_query
                         });
                         let _ = request.respond(with_cors_headers(
@@ -406,6 +532,18 @@ fn validate_query_stability(sparql_query: &str) -> Result<(), String> {
     Ok(())
 }
 
+
+fn validate_sparql_syntax(sparql_query: &str) -> Result<(), String> {
+    let trimmed = sparql_query.trim();
+    if trimmed.is_empty() {
+        return Err("SPARQL syntax error: empty query".to_string());
+    }
+
+    Query::parse(trimmed, None)
+        .map(|_| ())
+        .map_err(|e| format!("SPARQL syntax error: {}", e))
+}
+
 fn extract_sqlstate(error_msg: &str) -> Option<String> {
     let patterns = [
         r"SQLSTATE[:=\s]+([A-Z0-9]{5})",
@@ -475,6 +613,70 @@ fn build_error_response(
 }
 
 
+fn sql_likely_returns_rows(sql: &str) -> bool {
+    let upper = sql.trim_start().to_ascii_uppercase();
+    upper.starts_with("SELECT")
+        || upper.starts_with("WITH")
+        || upper.starts_with("VALUES")
+        || upper.starts_with("SHOW")
+        || upper.starts_with("EXPLAIN")
+}
+
+fn execute_raw_sql_query(sql_query: &str) -> Result<serde_json::Value, String> {
+    // Normalize trailing semicolons for single-statement row queries.
+    let trimmed = sql_query.trim();
+    let normalized = trimmed.trim_end_matches(';').trim_end();
+    let has_inner_semicolon = normalized.contains(';');
+
+    if !normalized.is_empty() && !has_inner_semicolon && sql_likely_returns_rows(normalized) {
+        let wrapped_sql = format!("SELECT to_jsonb(t) FROM ({}) AS t", normalized);
+        let mut inner: Option<Result<Vec<serde_json::Value>, String>> = None;
+
+        if let Err(e) = Spi::connect(|client| {
+            inner = Some(match client.select(&wrapped_sql, None, None) {
+                Ok(table) => {
+                    let mut rows = Vec::new();
+                    let mut decode_err: Option<String> = None;
+                    for row in table {
+                        match row.get::<pgrx::JsonB>(1) {
+                            Ok(Some(payload)) => rows.push(payload.0),
+                            Ok(None) => rows.push(serde_json::Value::Null),
+                            Err(err) => {
+                                decode_err = Some(format!("SQL row decode failed: {}", err));
+                                break;
+                            }
+                        }
+                    }
+                    if let Some(err) = decode_err {
+                        Err(err)
+                    } else {
+                        Ok(rows)
+                    }
+                }
+                Err(err) => Err(format!("SQL query failed: {}", err)),
+            });
+            Ok::<(), pgrx::spi::SpiError>(())
+        }) {
+            return Err(format!("SPI connect failed: {}", e));
+        }
+
+        let rows = inner.unwrap_or_else(|| Err("SQL query produced no result".to_string()))?;
+        return Ok(serde_json::json!({
+            "mode": "sql",
+            "type": "rows",
+            "row_count": rows.len(),
+            "rows": rows,
+        }));
+    }
+
+    Spi::run(sql_query).map_err(|e| format!("SQL command failed: {}", e))?;
+    Ok(serde_json::json!({
+        "mode": "sql",
+        "type": "command",
+        "status": "ok",
+    }))
+}
+
 fn execute_ontop_query(sparql_query: &str) -> Result<Vec<serde_json::Value>, String> {
     // Single SPI frame: do not invoke SQL `ontop_query()` from inside `Spi::connect`
     // (that would nest SPI and SIGSEGV the backend when the inner frame calls SPI_finish).
@@ -500,7 +702,7 @@ fn build_logic_plan(sparql_query: &str) -> Result<LogicNode, String> {
         .parse(sparql_query)
         .map_err(|e| format!("SPARQL parse failed: {}", e))?;
 
-    // 从全局ENGINE获取元数据和映射
+    // 浠庡叏灞€ENGINE鑾峰彇鍏冩暟鎹拰鏄犲皠
     let guard = ENGINE
         .lock()
         .map_err(|e| format!("Engine lock failed: {}", e))?;
@@ -509,7 +711,7 @@ fn build_logic_plan(sparql_query: &str) -> Result<LogicNode, String> {
         "Engine not initialized. Run SELECT ontop_start_sparql_server();".to_string()
     })?;
 
-    // 使用引擎中的元数据和映射
+    // 浣跨敤寮曟搸涓殑鍏冩暟鎹拰鏄犲皠
     let builder = IRBuilder::new();
     builder
         .build_with_mappings(

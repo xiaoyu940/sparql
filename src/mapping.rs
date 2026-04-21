@@ -49,6 +49,8 @@ pub struct MappingRule {
     pub predicate: String,
     pub table_name: String,
     pub subject_template: Option<String>,
+    #[serde(default)]
+    pub object_constant: Option<String>,
     pub position_to_column: HashMap<usize, String>,
 }
 

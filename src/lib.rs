@@ -5,6 +5,7 @@ use pgrx::spi::SpiClient;
 use pgrx::{GucContext, GucFlags, GucRegistry, GucSetting};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use once_cell::sync::Lazy;
 use serde_json;
 
@@ -97,16 +98,23 @@ fn configured_http_gateway_workers_effective() -> usize {
 }
 
 const HTTP_WORKER_LOCK_KEY: i64 = 0x52534f4e_4854574b;
-const HTTP_WORKER_APPNAME_PREFIX: &str = "rs_ontop_core SPARQL Web Gateway";
-
 fn count_alive_http_gateway_workers() -> Result<usize, String> {
-    let sql = format!(
-        "SELECT COUNT(*)::int4\n         FROM pg_stat_activity\n         WHERE application_name LIKE '{}%'\n           AND state <> 'idle in transaction (aborted)'",
-        HTTP_WORKER_APPNAME_PREFIX
-    );
+    let sql = "SELECT COUNT(*)::int4
+               FROM pg_stat_activity
+               WHERE backend_type ~ '^rs_ontop_core SPARQL Web Gateway [0-9]+$'";
 
-    Spi::get_one::<i32>(&sql)
+    Spi::get_one::<i32>(sql)
         .map_err(|e| format!("count alive gateway workers failed: {}", e))
+        .map(|opt| opt.unwrap_or(0).max(0) as usize)
+}
+
+fn next_http_gateway_worker_id() -> Result<usize, String> {
+    let sql = "SELECT COALESCE(MAX((regexp_match(backend_type, '([0-9]+)$'))[1]::int), -1) + 1
+               FROM pg_stat_activity
+               WHERE backend_type ~ '^rs_ontop_core SPARQL Web Gateway [0-9]+$'";
+
+    Spi::get_one::<i32>(sql)
+        .map_err(|e| format!("compute next worker id failed: {}", e))
         .map(|opt| opt.unwrap_or(0).max(0) as usize)
 }
 
@@ -153,18 +161,32 @@ fn ontop_start_sparql_server() -> String {
 
     let result = (|| {
         let target = configured_http_gateway_workers_effective();
-        let alive = count_alive_http_gateway_workers()?;
-        let delta = target.saturating_sub(alive);
+        let mut alive = count_alive_http_gateway_workers()?;
         let mut started = 0usize;
+        let mut failed = 0usize;
+        let mut attempts = 0usize;
+        let max_attempts = target.saturating_mul(3).max(1);
 
-        if delta > 0 {
-            register_http_gateway_bgworkers(true, alive, delta);
-            started = delta;
+        while alive < target && attempts < max_attempts {
+            attempts += 1;
+            let worker_id = next_http_gateway_worker_id()?;
+            register_http_gateway_bgworkers(true, worker_id, 1);
+
+            std::thread::sleep(Duration::from_millis(200));
+            let refreshed = count_alive_http_gateway_workers()?;
+
+            if refreshed > alive {
+                started += refreshed - alive;
+            } else {
+                failed += 1;
+                std::thread::sleep(Duration::from_millis(200));
+            }
+            alive = refreshed;
         }
 
         Ok::<String, String>(format!(
-            "SPARQL HTTP workers target={}, alive={}, started={}",
-            target, alive, started
+            "SPARQL HTTP workers target={}, alive={}, started={}, failed={}, attempts={}",
+            target, alive, started, failed, attempts
         ))
     })();
 
@@ -173,6 +195,29 @@ fn ontop_start_sparql_server() -> String {
     match result {
         Ok(msg) => msg,
         Err(e) => format!("failed to start SPARQL workers: {}", e),
+    }
+}
+
+#[pg_extern]
+fn ontop_http_worker_status() -> String {
+    let target = configured_http_gateway_workers_effective();
+    let port = configured_http_gateway_port();
+    let reuseport = configured_http_gateway_reuseport();
+
+    let alive = count_alive_http_gateway_workers();
+
+    match alive {
+        Ok(alive) => format!(
+            "{{\"target\":{},\"alive\":{},\"port\":{},\"reuseport\":{}}}",
+            target, alive, port, reuseport
+        ),
+        Err(e) => format!(
+            "{{\"target\":{},\"alive\":null,\"port\":{},\"reuseport\":{},\"error\":\"{}\"}}",
+            target,
+            port,
+            reuseport,
+            e.replace('"', "'")
+        ),
     }
 }
 
@@ -819,51 +864,131 @@ fn ontop_inspect_ontology() -> pgrx::JsonB {
                 "@type": "owl:Class"
             });
             if let Some(map) = obj.as_object_mut() {
-            
-            if !class.parent_classes.is_empty() {
-                if class.parent_classes.len() == 1 {
-                    map.insert("rdfs:subClassOf".to_string(), json!({ "@id": class.parent_classes[0] }));
-                } else {
-                    let parents: Vec<_> = class.parent_classes.iter().map(|p| json!({ "@id": p })).collect();
-                    map.insert("rdfs:subClassOf".to_string(), json!(parents));
+                if !class.parent_classes.is_empty() {
+                    if class.parent_classes.len() == 1 {
+                        map.insert("rdfs:subClassOf".to_string(), json!({ "@id": class.parent_classes[0] }));
+                    } else {
+                        let parents: Vec<_> = class.parent_classes.iter().map(|p| json!({ "@id": p })).collect();
+                        map.insert("rdfs:subClassOf".to_string(), json!(parents));
+                    }
                 }
-            }
-            if let Some(lbl) = &class.label { map.insert("rdfs:label".to_string(), json!(lbl)); }
-            if let Some(cmt) = &class.comment { map.insert("rdfs:comment".to_string(), json!(cmt)); }
+                if let Some(lbl) = &class.label {
+                    map.insert("rdfs:label".to_string(), json!(lbl));
+                }
+                if let Some(cmt) = &class.comment {
+                    map.insert("rdfs:comment".to_string(), json!(cmt));
+                }
             }
             graph.push(obj);
         }
 
-        // 2. Properties
-        let mut sorted_props: Vec<_> = engine.mappings.properties.values().collect();
-        sorted_props.sort_by_key(|p| &p.iri);
-        for prop in sorted_props {
-            let mut types = Vec::new();
-            if prop.prop_type == PropertyType::Object { types.push("owl:ObjectProperty"); } 
-            else { types.push("owl:DatatypeProperty"); }
-            if prop.is_functional { types.push("owl:FunctionalProperty"); }
-            
-            let mut obj = json!({
-                "@id": prop.iri,
-                "@type": types
-            });
-            if let Some(map) = obj.as_object_mut() {
+        // 1.5 Fallback classes from mapping tables when explicit ontology classes are absent
+        let mut fallback_class_count = 0usize;
+        if engine.mappings.classes.is_empty() {
+            let mut tables: Vec<String> = engine
+                .mappings
+                .mappings
+                .values()
+                .flat_map(|rules| rules.iter().map(|r| r.table_name.clone()))
+                .collect();
+            tables.sort();
+            tables.dedup();
+            fallback_class_count = tables.len();
 
-            if let Some(inv) = &prop.inverse_of { map.insert("owl:inverseOf".to_string(), json!({ "@id": inv })); }
-            if !prop.parent_properties.is_empty() {
-                if prop.parent_properties.len() == 1 {
-                    map.insert("rdfs:subPropertyOf".to_string(), json!({ "@id": prop.parent_properties[0] }));
-                } else {
-                    let parents: Vec<_> = prop.parent_properties.iter().map(|p| json!({ "@id": p })).collect();
-                    map.insert("rdfs:subPropertyOf".to_string(), json!(parents));
+            for table in tables {
+                graph.push(json!({
+                    "@id": format!("urn:table:{}", table),
+                    "@type": "owl:Class",
+                    "rdfs:label": table,
+                }));
+            }
+        }
+
+        // 2. Properties
+        let mut fallback_property_count = 0usize;
+        if engine.mappings.properties.is_empty() {
+            let mut predicate_keys: Vec<String> = engine.mappings.mappings.keys().cloned().collect();
+            predicate_keys.sort();
+            for pred in predicate_keys {
+                if pred == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" {
+                    continue;
                 }
+                fallback_property_count += 1;
+                graph.push(json!({
+                    "@id": pred,
+                    "@type": ["owl:DatatypeProperty"]
+                }));
             }
-            if let Some(lbl) = &prop.label { map.insert("rdfs:label".to_string(), json!(lbl)); }
-            if let Some(cmt) = &prop.comment { map.insert("rdfs:comment".to_string(), json!(cmt)); }
-            if let Some(dom) = &prop.domain { map.insert("rdfs:domain".to_string(), json!({ "@id": dom })); }
-            if let Some(rng) = &prop.range { map.insert("rdfs:range".to_string(), json!({ "@id": rng })); }
+        } else {
+            let mut sorted_props: Vec<_> = engine.mappings.properties.values().collect();
+            sorted_props.sort_by_key(|p| &p.iri);
+            for prop in sorted_props {
+                let mut types = Vec::new();
+                if prop.prop_type == PropertyType::Object {
+                    types.push("owl:ObjectProperty");
+                } else {
+                    types.push("owl:DatatypeProperty");
+                }
+                if prop.is_functional {
+                    types.push("owl:FunctionalProperty");
+                }
+
+                let mut obj = json!({
+                    "@id": prop.iri,
+                    "@type": types
+                });
+                if let Some(map) = obj.as_object_mut() {
+                    if let Some(inv) = &prop.inverse_of {
+                        map.insert("owl:inverseOf".to_string(), json!({ "@id": inv }));
+                    }
+                    if !prop.parent_properties.is_empty() {
+                        if prop.parent_properties.len() == 1 {
+                            map.insert("rdfs:subPropertyOf".to_string(), json!({ "@id": prop.parent_properties[0] }));
+                        } else {
+                            let parents: Vec<_> = prop.parent_properties.iter().map(|p| json!({ "@id": p })).collect();
+                            map.insert("rdfs:subPropertyOf".to_string(), json!(parents));
+                        }
+                    }
+                    if let Some(lbl) = &prop.label {
+                        map.insert("rdfs:label".to_string(), json!(lbl));
+                    }
+                    if let Some(cmt) = &prop.comment {
+                        map.insert("rdfs:comment".to_string(), json!(cmt));
+                    }
+                    if let Some(dom) = &prop.domain {
+                        map.insert("rdfs:domain".to_string(), json!({ "@id": dom }));
+                    }
+                    if let Some(rng) = &prop.range {
+                        map.insert("rdfs:range".to_string(), json!({ "@id": rng }));
+                    }
+                }
+                graph.push(obj);
             }
-            graph.push(obj);
+        }
+
+        // 3. Mapping details
+        let mut predicate_keys: Vec<_> = engine.mappings.mappings.keys().cloned().collect();
+        predicate_keys.sort();
+
+        let mut mapping_predicates = Vec::new();
+        let mut mapping_rule_count = 0usize;
+        for pred in predicate_keys {
+            if let Some(rules) = engine.mappings.mappings.get(&pred) {
+                let mut out_rules = Vec::new();
+                for rule in rules {
+                    mapping_rule_count += 1;
+                    out_rules.push(json!({
+                        "table": rule.table_name,
+                        "subject_template": rule.subject_template,
+                        "position_to_column": rule.position_to_column,
+                    }));
+                }
+                mapping_predicates.push(json!({
+                    "predicate": pred,
+                    "rule_count": out_rules.len(),
+                    "rules": out_rules,
+                }));
+            }
         }
 
         let out = json!({
@@ -873,16 +998,23 @@ fn ontop_inspect_ontology() -> pgrx::JsonB {
                 "owl": "http://www.w3.org/2002/07/owl#",
                 "xsd": "http://www.w3.org/2001/XMLSchema#"
             },
-            "@graph": graph
+            "@graph": graph,
+            "mappings": {
+                "predicates": mapping_predicates,
+            },
+            "stats": {
+                "class_count": if engine.mappings.classes.is_empty() { fallback_class_count } else { engine.mappings.classes.len() },
+                "property_count": if engine.mappings.properties.is_empty() { fallback_property_count } else { engine.mappings.properties.len() },
+                "predicate_count": engine.mappings.mappings.len(),
+                "mapping_rule_count": mapping_rule_count,
+            }
         });
-        
+
         pgrx::JsonB(out)
     } else {
         pgrx::JsonB(serde_json::Value::Null)
     }
 }
-
-
 
 
 #[pg_extern]

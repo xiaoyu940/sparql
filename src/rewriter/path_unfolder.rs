@@ -478,6 +478,7 @@ mod tests {
             predicate: "http://example.org/manager".to_string(),
             table_name: "employees".to_string(),
             subject_template: Some("http://example.org/emp/{employee_id}".to_string()),
+            object_constant: None,
             position_to_column: {
                 let mut m = HashMap::new();
                 m.insert(1, "manager_id".to_string()); // object列
@@ -491,6 +492,7 @@ mod tests {
             predicate: "http://example.org/name".to_string(),
             table_name: "employees".to_string(),
             subject_template: Some("http://example.org/emp/{employee_id}".to_string()),
+            object_constant: None,
             position_to_column: {
                 let mut m = HashMap::new();
                 m.insert(1, "name".to_string());
@@ -504,6 +506,7 @@ mod tests {
             predicate: "http://example.org/email".to_string(),
             table_name: "employees".to_string(),
             subject_template: Some("http://example.org/emp/{employee_id}".to_string()),
+            object_constant: None,
             position_to_column: {
                 let mut m = HashMap::new();
                 m.insert(1, "email".to_string());
@@ -517,6 +520,7 @@ mod tests {
             predicate: "http://example.org/phone".to_string(),
             table_name: "employees".to_string(),
             subject_template: Some("http://example.org/emp/{employee_id}".to_string()),
+            object_constant: None,
             position_to_column: {
                 let mut m = HashMap::new();
                 m.insert(1, "phone".to_string());

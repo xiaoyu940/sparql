@@ -1,25 +1,21 @@
-use pgrx::bgworkers::*;
+﻿use pgrx::bgworkers::*;
 use pgrx::prelude::*;
+use spargebra::Query;
+use std::io::Read;
 use std::time::Duration;
-use tiny_http::{Server, Response, Method, StatusCode};
+use tiny_http::{Method, Response, Server, StatusCode};
 use url::Url;
-use chrono;
 
-use crate::listener::{format_sparql_response};
+use crate::listener::{execute_ontop_query, format_sparql_response};
 
-/// 鲁棒的SPARQL监听器 - 改进错误处理，防止单个查询失败导致服务关闭
 #[pg_guard]
 #[no_mangle]
 pub extern "C-unwind" fn ontop_robust_sparql_bgworker_main(_arg: pg_sys::Datum) {
     log!("rs-ontop-core: Starting Robust SPARQL Gateway Background Worker");
 
-    // Step 1: Attach signal handlers so SIGTERM works correctly
     BackgroundWorker::attach_signal_handlers(SignalWakeFlags::SIGHUP | SignalWakeFlags::SIGTERM);
-
-    // Step 2: Connect to the database BEFORE entering any transaction
     BackgroundWorker::connect_worker_to_spi(Some("rs_ontop_core"), None);
 
-    // Step 3: Bind the HTTP port OUTSIDE of any transaction  
     let server = match Server::http("0.0.0.0:5820") {
         Ok(s) => s,
         Err(e) => {
@@ -30,27 +26,22 @@ pub extern "C-unwind" fn ontop_robust_sparql_bgworker_main(_arg: pg_sys::Datum) 
 
     log!("rs-ontop-core Robust SPARQL Listener successfully bound to http://0.0.0.0:5820");
 
-    // Step 4: Main HTTP event loop with robust error handling
     let mut consecutive_errors = 0;
     let max_consecutive_errors = 10;
-    
+
     while BackgroundWorker::wait_latch(Some(Duration::from_millis(0))) {
         pgrx::check_for_interrupts!();
 
         match server.recv_timeout(Duration::from_millis(100)) {
             Ok(Some(request)) => {
                 let path = request.url().to_string();
-
-                // 重置错误计数器
                 consecutive_errors = 0;
 
-                // --- Route: /ontology (expose JSON-LD TBox) ---
                 if path.starts_with("/ontology") {
                     handle_ontology_request(request);
                     continue;
                 }
 
-                // --- Route: /sparql (execute SPARQL query) ---
                 if path.starts_with("/sparql") {
                     if let Err(e) = handle_sparql_request(request) {
                         log!("rs-ontop-core: Error handling SPARQL request: {}", e);
@@ -59,31 +50,30 @@ pub extern "C-unwind" fn ontop_robust_sparql_bgworker_main(_arg: pg_sys::Datum) 
                     continue;
                 }
 
-                // --- Route: /health (health check) ---
                 if path.starts_with("/health") {
                     handle_health_request(request);
                     continue;
                 }
 
-                // --- Default: 404 ---
                 let _ = request.respond(
-                    Response::from_string("{\"error\":\"Not Found\"}").with_status_code(StatusCode(404))
+                    Response::from_string("{\"error\":\"Not Found\"}")
+                        .with_status_code(StatusCode(404)),
                 );
-            },
+            }
             Ok(None) => {
-                // Timeout, reset error counter
                 consecutive_errors = 0;
-                continue;
-            },
+            }
             Err(e) => {
                 log!("rs-ontop-core HTTP error: {}", e);
                 consecutive_errors += 1;
-                
-                // 如果连续错误太多，等待一段时间再重试
+
                 if consecutive_errors >= max_consecutive_errors {
-                    log!("rs-ontop-core: Too many consecutive errors ({}), waiting before retry", consecutive_errors);
+                    log!(
+                        "rs-ontop-core: Too many consecutive errors ({}), waiting before retry",
+                        consecutive_errors
+                    );
                     std::thread::sleep(Duration::from_secs(1));
-                    consecutive_errors = 0; // 重置计数器
+                    consecutive_errors = 0;
                 }
             }
         }
@@ -92,146 +82,284 @@ pub extern "C-unwind" fn ontop_robust_sparql_bgworker_main(_arg: pg_sys::Datum) 
     log!("rs-ontop-core: Robust SPARQL Gateway Background Worker cleanly stopped.");
 }
 
-/// 处理ontology请求
 fn handle_ontology_request(request: tiny_http::Request) {
-    // Each SPI call needs its own transaction
     let body = BackgroundWorker::transaction(|| {
-        Spi::get_one::<pgrx::JsonB>("SELECT ontop_inspect_ontology();")
+        Spi::get_one::<pgrx::JsonB>(
+            r#"
+            SELECT
+              COALESCE(ontop_inspect_ontology(), '{}'::jsonb)
+              || jsonb_build_object(
+                   'mappings', jsonb_build_object(
+                     'raw_sources', COALESCE((
+                       SELECT jsonb_agg(
+                         jsonb_build_object(
+                           'id', id,
+                           'name', name,
+                           'ttl_length', length(ttl_content),
+                           'ttl_content', ttl_content
+                         )
+                         ORDER BY id
+                       )
+                       FROM public.ontop_r2rml_mappings
+                     ), '[]'::jsonb),
+                     'rules', COALESCE((
+                       SELECT jsonb_agg(
+                         jsonb_build_object(
+                           'target_triple', target_triple,
+                           'sql_source', sql_source
+                         )
+                       )
+                       FROM ontop_inspect_mappings()
+                     ), '[]'::jsonb)
+                   ),
+                   'stats', jsonb_build_object(
+                     'raw_source_count', COALESCE((SELECT count(*) FROM public.ontop_r2rml_mappings), 0),
+                     'rule_count', COALESCE((SELECT count(*) FROM ontop_inspect_mappings()), 0)
+                   )
+                 )
+            ;
+        "#,
+        )
     });
 
     match body {
         Ok(Some(json_ld)) => {
             let json_str = serde_json::to_string(&json_ld.0).unwrap_or_default();
-            let response = Response::from_string(json_str)
-                .with_header(tiny_http::Header::from_bytes(
+            let response = Response::from_string(json_str).with_header(
+                tiny_http::Header::from_bytes(
                     &b"Content-Type"[..],
                     &b"application/json; charset=utf-8"[..],
-                ).expect("valid regex"));
+                )
+                .expect("valid header"),
+            );
             let _ = request.respond(response);
-        },
+        }
         Ok(None) => {
             let _ = request.respond(
-                Response::from_string("{\"error\":\"Engine not initialized\"}").with_status_code(StatusCode(503))
+                Response::from_string("{\"error\":\"Engine not initialized\"}")
+                    .with_status_code(StatusCode(503)),
             );
-        },
+        }
         Err(e) => {
             let _ = request.respond(
-                Response::from_string(format!("{{\"error\":\"{}\"}}", e)).with_status_code(StatusCode(500))
+                Response::from_string(format!("{{\"error\":\"{}\"}}", e))
+                    .with_status_code(StatusCode(500)),
             );
         }
     }
 }
 
-/// 处理SPARQL请求 - 增强错误处理
-fn handle_sparql_request(mut request: tiny_http::Request) -> Result<(), String> {
-    let path = request.url().to_string();
-    let method = request.method().clone();
-    
-    let mut sparql_query = String::new();
+fn normalize_sparql_query_input(query: &str) -> String {
+    let mut out = String::with_capacity(query.len());
+    let mut in_angle = false;
 
-    if method == Method::Post {
-        let mut content = String::new();
-        if let Err(e) = request.as_reader().read_to_string(&mut content) {
-            return Err(format!("Failed to read request body: {}", e));
+    for ch in query.chars() {
+        match ch {
+            '<' => {
+                in_angle = true;
+                out.push('<');
+            }
+            '>' => {
+                if in_angle {
+                    while out
+                        .chars()
+                        .last()
+                        .map(|c| c.is_whitespace() || c == '`')
+                        .unwrap_or(false)
+                    {
+                        out.pop();
+                    }
+                }
+                in_angle = false;
+                out.push('>');
+            }
+            '`' if in_angle => {}
+            _ if in_angle && out.ends_with('<') && ch.is_whitespace() => {}
+            _ => out.push(ch),
         }
-        sparql_query = content;
-    } else if method == Method::Get {
-        if let Ok(url) = Url::parse(&format!("http://localhost{}", path)) {
-            for (key, val) in url.query_pairs() {
-                if key == "query" {
-                    sparql_query = val.to_string();
+    }
+
+    let normalized = out.replace('`', "");
+
+    let mut compact = String::with_capacity(normalized.len());
+    let mut chars = normalized.chars().peekable();
+    while let Some(c) = chars.next() {
+        compact.push(c);
+        if c == '<' {
+            while let Some(n) = chars.peek() {
+                if n.is_whitespace() {
+                    chars.next();
+                } else {
+                    break;
                 }
             }
         }
     }
 
-    if sparql_query.is_empty() {
+    compact
+}
+
+fn validate_sparql_syntax(sparql_query: &str) -> Result<(), String> {
+    let trimmed = sparql_query.trim();
+    if trimmed.is_empty() {
+        return Err("SPARQL syntax error: empty query".to_string());
+    }
+
+    Query::parse(trimmed, None)
+        .map(|_| ())
+        .map_err(|e| format!("SPARQL syntax error: {}", e))
+}
+
+fn handle_sparql_request(mut request: tiny_http::Request) -> Result<(), String> {
+    let method = request.method().clone();
+    let path = request.url().to_string();
+
+    if method == Method::Options {
+        let response = Response::empty(StatusCode(204));
+        let _ = request.respond(response);
+        return Ok(());
+    }
+
+    let mut sparql_query = String::new();
+
+    if method == Method::Post {
+        let mut content = String::new();
+        let _ = request.as_reader().read_to_string(&mut content);
+        if content.starts_with("query=") {
+            for (k, v) in url::form_urlencoded::parse(content.as_bytes()) {
+                if k == "query" {
+                    sparql_query = v.into_owned();
+                    break;
+                }
+            }
+        } else {
+            sparql_query = content;
+        }
+    } else if method == Method::Get {
+        if let Ok(url) = Url::parse(&format!("http://localhost{}", path)) {
+            for (key, val) in url.query_pairs() {
+                if key == "query" {
+                    sparql_query = val.to_string();
+                    break;
+                }
+            }
+        }
+    }
+
+    if sparql_query.trim().is_empty() {
         let _ = request.respond(
-            Response::from_string("{\"error\":\"Missing query parameter\"}").with_status_code(StatusCode(400))
+            Response::from_string("{\"error\":\"Missing query parameter\"}")
+                .with_status_code(StatusCode(400)),
+        );
+        return Ok(());
+    }
+
+    let normalized_query = normalize_sparql_query_input(&sparql_query);
+    if normalized_query != sparql_query {
+        sparql_query = normalized_query;
+        log!("rs-ontop-core: Normalized incoming SPARQL query formatting");
+    }
+
+    if let Err(e) = validate_sparql_syntax(&sparql_query) {
+        let safe_msg = e.replace('"', "'");
+        let _ = request.respond(
+            Response::from_string(format!(
+                "{{\"error\":\"{}\",\"code\":\"SPARQL_SYNTAX_ERROR\",\"status_code\":400}}",
+                safe_msg
+            ))
+            .with_status_code(StatusCode(400)),
         );
         return Ok(());
     }
 
     log!("rs-ontop-core: Received SPARQL query: {}", sparql_query);
 
-    // 使用try-catch块来捕获所有可能的错误
-    let result = std::panic::catch_unwind(|| {
-        let sparql_clone = sparql_query.clone();
-        BackgroundWorker::transaction(move || {
-            Spi::connect(|client| {
-                let sql = format!("SELECT ontop_query($pgrx${}$pgrx$);", sparql_clone);
-                let table = client
-                    .select(&sql, None, None)
-                    .map_err(|e| format!("Query execution failed: {}", e))?;
-                let mut results = Vec::new();
-                for row in table {
-                    if let Some(jsonb) = row
-                        .get_by_name::<pgrx::JsonB, _>("ontop_query")
-                        .map_err(|e| format!("Failed to read binding: {}", e))?
-                    {
-                        results.push(jsonb.0);
-                    }
-                }
-                Ok::<Vec<serde_json::Value>, String>(results)
-            })
-        })
-    });
+    let sparql_for_worker = sparql_query.clone();
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {
+        BackgroundWorker::transaction(|| execute_ontop_query(&sparql_for_worker))
+    }));
 
     match result {
-        Ok(exec_result) => {
-            match exec_result {
-                Ok(bindings) => {
-                    let out = format_sparql_response(&sparql_query, bindings);
-                    let response = Response::from_string(out.to_string())
-                        .with_header(tiny_http::Header::from_bytes(
-                            &b"Content-Type"[..],
-                            &b"application/sparql-results+json; charset=utf-8"[..],
-                        ).expect("valid regex"));
-                    let _ = request.respond(response);
-                },
-                Err(e) => {
-                    let error_msg = format!("Query error: {}", e);
-                    log!("rs-ontop-core: {}", error_msg);
-                    let _ = request.respond(
-                        Response::from_string(format!("{{\"error\":\"{}\"}}", error_msg))
-                            .with_status_code(StatusCode(500))
-                    );
-                }
-            }
-        },
+        Ok(Ok(rows)) => {
+            let response_data = format_sparql_response(&sparql_query, rows);
+            let response = Response::from_string(response_data.to_string())
+                .with_header(
+                    tiny_http::Header::from_bytes(
+                        &b"Content-Type"[..],
+                        &b"application/sparql-results+json"[..],
+                    )
+                    .expect("valid header"),
+                )
+                .with_status_code(StatusCode(200));
+            let _ = request.respond(response);
+            Ok(())
+        }
+        Ok(Err(e)) => {
+            let error_data = serde_json::json!({
+                "error": e,
+                "query": sparql_query,
+                "status_code": 500
+            });
+            let response = Response::from_string(error_data.to_string())
+                .with_header(
+                    tiny_http::Header::from_bytes(
+                        &b"Content-Type"[..],
+                        &b"application/json"[..],
+                    )
+                    .expect("valid header"),
+                )
+                .with_status_code(StatusCode(500));
+            let _ = request.respond(response);
+            Ok(())
+        }
         Err(panic_info) => {
-            let error_msg = if let Some(s) = panic_info.downcast_ref::<String>() {
-                format!("Internal error: {}", s)
-            } else if let Some(s) = panic_info.downcast_ref::<&str>() {
-                format!("Internal error: {}", s)
+            let panic_msg = if let Some(s) = panic_info.downcast_ref::<&str>() {
+                s.to_string()
+            } else if let Some(s) = panic_info.downcast_ref::<String>() {
+                s.clone()
             } else {
-                "Internal error: Unknown panic".to_string()
+                "Unknown panic".to_string()
             };
-            
-            log!("rs-ontop-core: Panic caught: {}", error_msg);
-            let _ = request.respond(
-                Response::from_string(format!("{{\"error\":\"{}\"}}", error_msg))
-                    .with_status_code(StatusCode(500))
+
+            log!(
+                "rs-ontop-core: SPARQL_REQUEST_PANIC: query='{}', panic='{}'",
+                sparql_query,
+                panic_msg
             );
+
+            let error_data = serde_json::json!({
+                "error": format!("Internal error: {}", panic_msg),
+                "query": sparql_query,
+                "status_code": 500,
+                "error_code": "SPARQL_REQUEST_PANIC"
+            });
+
+            let response = Response::from_string(error_data.to_string())
+                .with_header(
+                    tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                        .expect("valid header"),
+                )
+                .with_status_code(StatusCode(500));
+            let _ = request.respond(response);
+            Ok(())
         }
     }
-
-    Ok(())
 }
 
-/// 处理健康检查请求
 fn handle_health_request(request: tiny_http::Request) {
-    let health_status = serde_json::json!({
+    let health_data = serde_json::json!({
         "status": "healthy",
         "service": "rs-ontop-core SPARQL Gateway",
-        "version": "1.0.0",
-        "timestamp": chrono::Utc::now().to_rfc3339()
+        "timestamp": chrono::Utc::now().to_rfc3339(),
+        "version": "0.3.0"
     });
 
-    let response = Response::from_string(health_status.to_string())
-        .with_header(tiny_http::Header::from_bytes(
-            &b"Content-Type"[..],
-            &b"application/json; charset=utf-8"[..],
-        ).expect("valid regex"));
+    let response = Response::from_string(health_data.to_string())
+        .with_header(
+            tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..])
+                .expect("valid header"),
+        )
+        .with_status_code(StatusCode(200));
+
     let _ = request.respond(response);
 }

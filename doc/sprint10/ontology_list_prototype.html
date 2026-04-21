@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ontology List Prototype</title>
+  <style>
+    body{margin:0;font-family:Arial,sans-serif;background:#f6f4ef;color:#1f2a30}
+    .wrap{max-width:1100px;margin:20px auto;padding:0 12px}
+    .card{background:#fffdf8;border:1px solid #d9d4c7;border-radius:12px;overflow:hidden}
+    .hd{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #d9d4c7}
+    .bd{padding:14px}
+    .row{display:grid;grid-template-columns:1fr 160px 180px;gap:10px;margin-bottom:12px}
+    input,select,button{border:1px solid #d9d4c7;border-radius:8px;padding:8px 10px;font-size:13px}
+    button{cursor:pointer;background:#fff}
+    .list{display:grid;gap:8px}
+    .item{display:grid;grid-template-columns:1fr auto;gap:10px;border:1px solid #d9d4c7;border-radius:10px;padding:10px;background:#fff}
+    .iri{font-size:12px;color:#6f7c82;word-break:break-all}
+    .meta{display:flex;gap:6px;flex-wrap:wrap;font-size:11px}
+    .tag{border:1px solid #d9d4c7;border-radius:999px;padding:2px 7px;background:#faf9f5}
+    @media (max-width:900px){.row{grid-template-columns:1fr}.item{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <div class="hd">
+        <h2>Ontology Objects List</h2>
+        <div>
+          <button onclick="alert('mock create class')">+ Class</button>
+          <button onclick="alert('mock create property')">+ Property</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="row">
+          <input id="kw" placeholder="Search by IRI / label" />
+          <select id="type"><option value="all">All types</option><option value="class">Class</option><option value="property">Property</option></select>
+          <select id="cfg"><option value="all">All status</option><option value="configured">Configured</option><option value="missing">Missing config</option></select>
+        </div>
+        <div id="list" class="list"></div>
+        <p style="font-size:12px;color:#6f7c82">This page only handles list, search, and selection. Click Open Config to edit object settings.</p>
+      </div>
+    </section>
+  </div>
+
+<script>
+const data=[
+{iri:'http://example.org/Employee',label:'Employee',type:'class',configured:true},
+{iri:'http://example.org/Department',label:'Department',type:'class',configured:true},
+{iri:'http://example.org/worksIn',label:'worksIn',type:'property',configured:false},
+{iri:'http://example.org/salary',label:'salary',type:'property',configured:false}
+];
+const kw=document.getElementById('kw');
+const type=document.getElementById('type');
+const cfg=document.getElementById('cfg');
+const list=document.getElementById('list');
+function openCfg(iri){location.href='./ontology_config_prototype.html?iri='+encodeURIComponent(iri)}
+function render(){
+  const k=kw.value.trim().toLowerCase();
+  const t=type.value; const c=cfg.value;
+  const rows=data.filter(x=>{
+    if(t!=='all'&&x.type!==t)return false;
+    if(c==='configured'&&!x.configured)return false;
+    if(c==='missing'&&x.configured)return false;
+    if(!k)return true;
+    return x.iri.toLowerCase().includes(k)||x.label.toLowerCase().includes(k);
+  });
+  list.innerHTML=rows.map(x=>`<article class="item"><div><div><strong>${x.label}</strong></div><div class="iri">${x.iri}</div><div class="meta"><span class="tag">${x.type}</span><span class="tag">${x.configured?'configured':'missing config'}</span></div></div><div><button onclick="openCfg('${x.iri}')">Open Config</button></div></article>`).join('');
+}
+[kw,type,cfg].forEach(el=>el.addEventListener('input',render));
+[type,cfg].forEach(el=>el.addEventListener('change',render));
+render();
+</script>
+</body>
+</html>

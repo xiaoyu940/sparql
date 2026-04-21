@@ -1,0 +1,114 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>5820 /sql 手工测试页</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f6f7fb; color: #222; }
+    h1 { margin: 0 0 12px; font-size: 22px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    button { border: 1px solid #cfd3dc; background: #fff; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+    button:hover { background: #f0f4ff; }
+    textarea { width: 100%; min-height: 120px; border: 1px solid #cfd3dc; border-radius: 8px; padding: 10px; font-family: Consolas, monospace; font-size: 13px; }
+    .hint { color: #666; font-size: 12px; margin: 6px 0 12px; }
+    pre { background: #111827; color: #e5e7eb; border-radius: 10px; padding: 12px; overflow: auto; min-height: 180px; }
+    .ok { color: #0a7d2c; }
+    .err { color: #b42318; }
+    .top { background: #fff; border: 1px solid #e4e7ef; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <h1>5820 /sql 手工测试页</h1>
+
+  <div class="top">
+    <div class="row">
+      <label>服务地址：</label>
+      <input id="baseUrl" value="http://127.0.0.1:5820/sql" style="min-width:320px;padding:8px;border:1px solid #cfd3dc;border-radius:8px;" />
+      <button onclick="ping()">Ping</button>
+    </div>
+    <div id="status" class="hint">状态：未测试</div>
+  </div>
+
+  <div class="top">
+    <div class="row">
+      <button onclick="runPreset('SELECT 1 AS ping')">SELECT 1</button>
+      <button onclick="runPreset('SELECT COUNT(*)::bigint AS row_count FROM employees')">employees 行数</button>
+      <button onclick="runPreset('SELECT COUNT(*)::bigint AS row_count FROM departments')">departments 行数</button>
+      <button onclick="runPreset('SELECT * FROM employees ORDER BY employee_id LIMIT 10')">employees 样本</button>
+      <button onclick="runPreset('SELECT d.department_name, COUNT(*)::bigint AS cnt FROM employees e JOIN departments d ON d.department_id=e.department_id GROUP BY d.department_name ORDER BY cnt DESC')">部门聚合</button>
+      <button onclick="runPreset('CREATE TEMP TABLE IF NOT EXISTS ontop_http_sql_test(id int)')">执行 DDL</button>
+    </div>
+
+    <textarea id="sql">SELECT 1 AS ping;</textarea>
+    <div class="row" style="margin-top:10px;">
+      <button onclick="runCustom()">执行自定义 SQL</button>
+      <button onclick="clearOutput()">清空输出</button>
+    </div>
+    <div class="hint">说明：通过 GET ?query=... 调用 /sql。支持你当前服务允许的任意 SQL。</div>
+  </div>
+
+  <pre id="output">等待执行...</pre>
+
+  <script>
+    function getBaseUrl() {
+      const v = document.getElementById('baseUrl').value.trim();
+      return v || 'http://127.0.0.1:5820/sql';
+    }
+
+    async function callSql(sql) {
+      const base = getBaseUrl();
+      const url = base + '?query=' + encodeURIComponent(sql);
+      const resp = await fetch(url, { method: 'GET' });
+      const text = await resp.text();
+      return { ok: resp.ok, status: resp.status, text };
+    }
+
+    function setOutput(obj) {
+      const out = document.getElementById('output');
+      try {
+        const parsed = JSON.parse(obj.text);
+        out.textContent = JSON.stringify({ status: obj.status, body: parsed }, null, 2);
+      } catch {
+        out.textContent = `status=${obj.status}\n` + obj.text;
+      }
+    }
+
+    async function ping() {
+      const status = document.getElementById('status');
+      status.textContent = '状态：测试中...';
+      try {
+        const r = await callSql('SELECT 1 AS ping');
+        status.innerHTML = r.ok
+          ? `<span class="ok">状态：可用（HTTP ${r.status}）</span>`
+          : `<span class="err">状态：失败（HTTP ${r.status}）</span>`;
+        setOutput(r);
+      } catch (e) {
+        status.innerHTML = `<span class="err">状态：异常（${e.message}）</span>`;
+        document.getElementById('output').textContent = String(e);
+      }
+    }
+
+    function runPreset(sql) {
+      document.getElementById('sql').value = sql;
+      runCustom();
+    }
+
+    async function runCustom() {
+      const sql = document.getElementById('sql').value;
+      const out = document.getElementById('output');
+      out.textContent = '执行中...';
+      try {
+        const r = await callSql(sql);
+        setOutput(r);
+      } catch (e) {
+        out.textContent = String(e);
+      }
+    }
+
+    function clearOutput() {
+      document.getElementById('output').textContent = '';
+    }
+  </script>
+</body>
+</html>

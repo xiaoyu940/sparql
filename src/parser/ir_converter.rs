@@ -502,10 +502,11 @@ impl IRConverter {
                         };
                         let mut candidates: Vec<&crate::mapping::MappingRule> = store
                             .mappings
-                            .get(&class_iri)
+                            .get("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
                             .map(|rules| {
                                 rules
                                     .iter()
+                                    .filter(|r| r.object_constant.as_deref() == Some(class_iri.as_str()))
                                     .filter(|r| Self::mapping_rule_is_usable(r, metadata_map))
                                     .collect()
                             })
@@ -1314,10 +1315,14 @@ fn extract_var_bindings(node: &LogicNode) -> HashMap<String, String> {
             return None;
         }
         let class_iri = pattern.object.trim_start_matches('<').trim_end_matches('>');
-        let rules = mappings.mappings.get(class_iri)?;
+        let rules = mappings
+            .mappings
+            .get("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")?;
         let mut tables = std::collections::HashSet::new();
         for rule in rules {
-            tables.insert(rule.table_name.clone());
+            if rule.object_constant.as_deref() == Some(class_iri) {
+                tables.insert(rule.table_name.clone());
+            }
         }
         if tables.len() == 1 {
             tables.into_iter().next()
