@@ -626,7 +626,7 @@ pub fn extract_triple_patterns(input: &str) -> Vec<TriplePattern> {
     let mut patterns: Vec<TriplePattern> = Vec::new();
 
     let re_type_assertion = regex::Regex::new(
-        r"(?m)(\?\w+)\s+a\s+<([^>]+)>\s*[.;]"
+        r#"(?m)(\?\w+)\s+a\s+(\?\w+|<[^>]+>)\s*[.;]"#
     ).expect("valid type assertion regex");
 
     for cap in re_type_assertion.captures_iter(&expanded_with_prefixes) {
@@ -638,7 +638,7 @@ pub fn extract_triple_patterns(input: &str) -> Vec<TriplePattern> {
     }
 
     let re_predicate = regex::Regex::new(
-        r#"(?m)(\?\w+)\s+([^?\s][^\s]*)\s+(\?\w+|<[^>]+>|"[^"]*"(?:\^\^<[^>]+>)?)\s*[.;]"#
+        r#"(?m)(\?\w+)\s+(\?\w+|[^?\s][^\s]*)\s+(\?\w+|<[^>]+>|"[^"]*"(?:\^\^<[^>]+>)?)\s*[.;]"#
     ).expect("valid predicate regex");
 
     for cap in re_predicate.captures_iter(&expanded_with_prefixes) {
@@ -667,7 +667,6 @@ pub fn extract_triple_patterns(input: &str) -> Vec<TriplePattern> {
     );
     patterns
 }
-
 fn expand_prefixes(input: &str) -> String {
     let mut result = input.to_string();
     let mut prefixes = std::collections::HashMap::new();
@@ -715,12 +714,40 @@ fn expand_prefixes(input: &str) -> String {
 fn expand_sparql_shorthand(input: &str) -> String {
     let mut result = String::new();
     let mut current_subject: Option<String> = None;
-    
-    // 首先按 . 或 ; 分割整个输入（处理跨行或同行的多个三元组）
-    // 但需要保护 <...> IRIs 中的 . 和 ;
+
+    let append_segment = |trimmed: &str, current_subject: &mut Option<String>, result: &mut String| {
+        if trimmed.is_empty() {
+            return;
+        }
+
+        let tokens: Vec<&str> = trimmed.split_whitespace().collect();
+        if tokens.len() >= 3 && trimmed.starts_with('?') {
+            if let Some(first_space) = trimmed.find(' ') {
+                *current_subject = Some(trimmed[..first_space].to_string());
+            }
+            result.push_str(trimmed);
+            result.push_str(" .
+");
+            return;
+        }
+
+        let omitted_subject = tokens.len() == 2
+            && current_subject.is_some()
+            && (tokens[0].starts_with('?') || tokens[0].starts_with('<') || tokens[0] == "a");
+        if omitted_subject {
+            if let Some(subject) = current_subject.as_ref() {
+                result.push_str(subject);
+                result.push(' ');
+                result.push_str(trimmed);
+                result.push_str(" .
+");
+            }
+        }
+    };
+
     let mut in_iri = false;
     let mut current_segment = String::new();
-    
+
     for ch in input.chars() {
         if ch == '<' && !in_iri {
             in_iri = true;
@@ -729,59 +756,21 @@ fn expand_sparql_shorthand(input: &str) -> String {
             in_iri = false;
             current_segment.push(ch);
         } else if (ch == '.' || ch == ';') && !in_iri {
-            // 段结束符
-            let trimmed = current_segment.trim();
-            if !trimmed.is_empty() {
-                if trimmed.starts_with('?') {
-                    // 这是一个完整的三元组（以变量开头），提取主语
-                    if let Some(first_space) = trimmed.find(' ') {
-                        current_subject = Some(trimmed[..first_space].to_string());
-                    }
-                    result.push_str(trimmed);
-                    result.push_str(" .\n");
-                } else if trimmed.starts_with('<') && current_subject.is_some() {
-                    // 这是一个省略主语的谓词-宾语对，需要添加主语
-                    if let Some(ref subject) = current_subject {
-                        result.push_str(subject);
-                        result.push(' ');
-                        result.push_str(trimmed);
-                        result.push_str(" .\n");
-                    }
-                }
-                // 否则丢弃（如 FILTER, BIND 等）
-            }
+            append_segment(current_segment.trim(), &mut current_subject, &mut result);
             current_segment.clear();
         } else {
             current_segment.push(ch);
         }
     }
-    
-    // 处理最后一个段（如果没有以 . 或 ; 结尾）
-    let trimmed = current_segment.trim();
-    if !trimmed.is_empty() {
-        if trimmed.starts_with('?') {
-            if let Some(first_space) = trimmed.find(' ') {
-                current_subject = Some(trimmed[..first_space].to_string());
-            }
-            result.push_str(trimmed);
-            result.push_str(" .\n");
-        } else if trimmed.starts_with('<') && current_subject.is_some() {
-            if let Some(ref subject) = current_subject {
-                result.push_str(subject);
-                result.push(' ');
-                result.push_str(trimmed);
-                result.push_str(" .\n");
-            }
-        }
-    }
-    
+
+    append_segment(current_segment.trim(), &mut current_subject, &mut result);
+
     if result.is_empty() {
         input.to_string()
     } else {
         result
     }
 }
-
 fn extract_optional_patterns(where_block: &str) -> Vec<Vec<TriplePattern>> {
     let re = regex::Regex::new(r"(?is)OPTIONAL\s*\{([^{}]*)\}").expect("valid optional regex");
     re.captures_iter(where_block)
@@ -1116,4 +1105,28 @@ fn extract_describe_resources(sparql: &str) -> Vec<String> {
     }
     
     resources
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::extract_triple_patterns;
+
+    #[test]
+    fn extracts_variable_rdf_type_object() {
+        let patterns = extract_triple_patterns("?s a ?class .");
+        assert_eq!(patterns.len(), 1);
+        assert_eq!(patterns[0].subject, "?s");
+        assert_eq!(patterns[0].predicate, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+        assert_eq!(patterns[0].object, "?class");
+    }
+
+    #[test]
+    fn extracts_variable_predicate_pattern() {
+        let patterns = extract_triple_patterns("?s ?p ?o .");
+        assert_eq!(patterns.len(), 1);
+        assert_eq!(patterns[0].subject, "?s");
+        assert_eq!(patterns[0].predicate, "?p");
+        assert_eq!(patterns[0].object, "?o");
+    }
 }

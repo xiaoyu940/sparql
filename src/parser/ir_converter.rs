@@ -341,6 +341,9 @@ impl IRConverter {
             if pattern.subject.starts_with('?') {
                 needed_vars.insert(pattern.subject.trim_start_matches('?').to_string());
             }
+            if pattern.predicate.starts_with('?') {
+                needed_vars.insert(pattern.predicate.trim_start_matches('?').to_string());
+            }
             if pattern.object.starts_with('?') {
                 needed_vars.insert(pattern.object.trim_start_matches('?').to_string());
             }
@@ -425,6 +428,229 @@ impl IRConverter {
         node
     }
 
+    fn pattern_requires_expansion(pattern: &super::TriplePattern) -> bool {
+        pattern.predicate.starts_with('?')
+            || (Self::is_rdf_type_predicate(&pattern.predicate) && pattern.object.starts_with('?'))
+    }
+
+    fn build_join_from_patterns_with_expansion(
+        patterns: &[super::TriplePattern],
+        metadata_map: &std::collections::HashMap<String, Arc<TableMetadata>>,
+        mappings: Option<&MappingStore>,
+        needed_vars: &std::collections::HashSet<String>,
+    ) -> LogicNode {
+        if patterns.is_empty() {
+            let metadata = Arc::new(TableMetadata {
+                table_name: "(SELECT 1)".to_string(),
+                columns: Vec::new(),
+                primary_keys: Vec::new(),
+                foreign_keys: Vec::new(),
+                unique_constraints: Vec::new(),
+                check_constraints: Vec::new(),
+                not_null_columns: Vec::new(),
+            });
+            return LogicNode::ExtensionalData {
+                table_name: "(SELECT 1)".to_string(),
+                column_mapping: HashMap::new(),
+                metadata,
+            };
+        }
+
+        let mut nodes = Vec::new();
+        for pattern in patterns {
+            let node = if Self::pattern_requires_expansion(pattern) {
+                Self::build_expanded_pattern_node(pattern, metadata_map, mappings)
+            } else {
+                Self::build_join_from_patterns_with_vars(std::slice::from_ref(pattern), metadata_map, mappings, needed_vars)
+            };
+            nodes.push(node);
+        }
+
+        if nodes.len() == 1 {
+            return nodes.into_iter().next().unwrap_or_else(|| LogicNode::Values {
+                variables: Vec::new(),
+                rows: Vec::new(),
+            });
+        }
+
+        let mut result = nodes[0].clone();
+        let mut result_vars = Self::extract_var_bindings(&result);
+        for right_node in nodes.into_iter().skip(1) {
+            let right_vars = Self::extract_var_bindings(&right_node);
+            let condition = Self::create_join_condition(&result_vars, &right_vars);
+            result = LogicNode::Join {
+                children: vec![result, right_node],
+                condition,
+                join_type: JoinType::Inner,
+            };
+            result_vars.extend(right_vars);
+        }
+
+        result
+    }
+
+    fn build_expanded_pattern_node(
+        pattern: &super::TriplePattern,
+        metadata_map: &std::collections::HashMap<String, Arc<TableMetadata>>,
+        mappings: Option<&MappingStore>,
+    ) -> LogicNode {
+        let Some(store) = mappings else {
+            return LogicNode::Values {
+                variables: Vec::new(),
+                rows: Vec::new(),
+            };
+        };
+
+        let mut candidates: Vec<(&str, &crate::mapping::MappingRule)> = Vec::new();
+        if pattern.predicate.starts_with('?') {
+            let mut predicates: Vec<_> = store.mappings.keys().collect();
+            predicates.sort();
+            for predicate in predicates {
+                if let Some(rules) = store.mappings.get(predicate) {
+                    for rule in rules {
+                        candidates.push((predicate.as_str(), rule));
+                    }
+                }
+            }
+        } else if Self::is_rdf_type_predicate(&pattern.predicate) && pattern.object.starts_with('?') {
+            if let Some(rules) = store.mappings.get("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") {
+                for rule in rules {
+                    candidates.push(("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", rule));
+                }
+            }
+        }
+
+        let mut branches = Vec::new();
+        for (predicate_iri, rule) in candidates {
+            if !Self::mapping_rule_is_usable(rule, metadata_map) {
+                continue;
+            }
+            let Some(metadata) = metadata_map.get(&rule.table_name) else {
+                continue;
+            };
+            if let Some(node) = Self::build_pattern_branch_from_rule(pattern, predicate_iri, rule, metadata) {
+                branches.push(node);
+            }
+        }
+
+        match branches.len() {
+            0 => LogicNode::Values {
+                variables: Vec::new(),
+                rows: Vec::new(),
+            },
+            1 => branches.into_iter().next().unwrap(),
+            _ => LogicNode::Union(branches),
+        }
+    }
+
+    fn build_pattern_branch_from_rule(
+        pattern: &super::TriplePattern,
+        predicate_iri: &str,
+        rule: &crate::mapping::MappingRule,
+        metadata: &Arc<TableMetadata>,
+    ) -> Option<LogicNode> {
+        let subject_col = rule
+            .subject_template
+            .as_ref()
+            .and_then(|tpl| Self::extract_subject_column_from_template(tpl))?;
+
+        let mut column_mapping = HashMap::new();
+        let mut filters = Vec::new();
+        let mut constant_bindings: HashMap<String, String> = HashMap::new();
+
+        if let Some(subject_var) = pattern.subject.strip_prefix('?') {
+            column_mapping.insert(subject_var.to_string(), subject_col.clone());
+        } else {
+            let dummy_var = format!("__subj_const_{}", column_mapping.len());
+            column_mapping.insert(dummy_var.clone(), subject_col.clone());
+            filters.push(Expr::Compare {
+                left: Box::new(Expr::Term(Term::Variable(dummy_var))),
+                op: ComparisonOp::Eq,
+                right: Box::new(Expr::Term(Self::token_to_term(&pattern.subject))),
+            });
+        }
+
+        if let Some(predicate_var) = pattern.predicate.strip_prefix('?') {
+            constant_bindings.insert(predicate_var.to_string(), predicate_iri.to_string());
+        }
+
+        if let Some(object_var) = pattern.object.strip_prefix('?') {
+            if let Some(object_col) = rule.position_to_column.get(&1) {
+                column_mapping.insert(object_var.to_string(), object_col.clone());
+            } else if let Some(object_constant) = &rule.object_constant {
+                constant_bindings.insert(object_var.to_string(), object_constant.clone());
+            } else {
+                return None;
+            }
+        } else if let Some(object_col) = rule.position_to_column.get(&1) {
+            let dummy_var = format!("__obj_const_{}", column_mapping.len());
+            column_mapping.insert(dummy_var.clone(), object_col.clone());
+            filters.push(Expr::Compare {
+                left: Box::new(Expr::Term(Term::Variable(dummy_var))),
+                op: ComparisonOp::Eq,
+                right: Box::new(Expr::Term(Self::token_to_term(&pattern.object))),
+            });
+        } else if let Some(object_constant) = &rule.object_constant {
+            if Some(object_constant.as_str()) != Self::token_constant_value(&pattern.object).as_deref() {
+                return None;
+            }
+        } else {
+            return None;
+        }
+
+        let mut node = LogicNode::ExtensionalData {
+            table_name: metadata.table_name.clone(),
+            column_mapping,
+            metadata: Arc::clone(metadata),
+        };
+
+        for filter_expr in filters {
+            node = LogicNode::Filter {
+                expression: filter_expr,
+                child: Box::new(node),
+            };
+        }
+
+        if constant_bindings.is_empty() {
+            Some(node)
+        } else {
+            Some(Self::wrap_node_with_constant_bindings(node, constant_bindings))
+        }
+    }
+
+    fn wrap_node_with_constant_bindings(
+        node: LogicNode,
+        constant_bindings: HashMap<String, String>,
+    ) -> LogicNode {
+        let passthrough_vars = node.used_variables();
+        let mut projected_vars: Vec<String> = passthrough_vars.iter().cloned().collect();
+        let mut bindings = HashMap::new();
+
+        for var in passthrough_vars {
+            bindings.insert(var.clone(), Expr::Term(Term::Variable(var)));
+        }
+        for (var, value) in constant_bindings {
+            if !projected_vars.contains(&var) {
+                projected_vars.push(var.clone());
+            }
+            bindings.insert(var, Expr::Term(Term::Constant(value)));
+        }
+        projected_vars.sort();
+
+        LogicNode::Construction {
+            projected_vars,
+            bindings,
+            child: Box::new(node),
+        }
+    }
+
+    fn token_constant_value(token: &str) -> Option<String> {
+        match Self::token_to_term(token) {
+            Term::Constant(value) => Some(value),
+            _ => None,
+        }
+    }
+
     fn build_join_from_patterns_with_vars(
         patterns: &[super::TriplePattern],
         metadata_map: &std::collections::HashMap<String, Arc<TableMetadata>>,
@@ -439,6 +665,10 @@ impl IRConverter {
                 i, p.subject, p.predicate, p.object);
         }
         
+        if patterns.iter().any(Self::pattern_requires_expansion) {
+            return Self::build_join_from_patterns_with_expansion(patterns, metadata_map, mappings, needed_vars);
+        }
+
         if patterns.is_empty() {
             let metadata = Arc::new(TableMetadata {
                 table_name: "(SELECT 1)".to_string(),
@@ -1885,7 +2115,19 @@ fn mapping_rule_is_usable(
         }
 
         // 4. 尝试匹配括号包裹
-        if trimmed.starts_with('(') && trimmed.ends_with(')') {
+                // 4. ?????
+        if let Some(rest) = trimmed.strip_prefix('!') {
+            let inner = rest.trim();
+            if !inner.is_empty() {
+                let expr = Self::parse_filter_expr(inner)?;
+                return Some(Expr::Logical {
+                    op: LogicalOp::Not,
+                    args: vec![expr],
+                });
+            }
+        }
+
+if trimmed.starts_with('(') && trimmed.ends_with(')') {
             if Self::is_fully_enclosed(trimmed) {
                 return Self::parse_filter_expr(&trimmed[1..trimmed.len() - 1]);
             }
@@ -2169,4 +2411,129 @@ fn substitute_bind_aliases(expr: Expr, bind_alias_exprs: &HashMap<String, Expr>)
         Term::Constant(t.to_string())
     }
 
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::IRConverter;
+    use crate::ir::expr::{Expr, Term};
+    use crate::ir::node::LogicNode;
+    use crate::mapping::{MappingRule, MappingStore};
+    use crate::metadata::TableMetadata;
+    use crate::parser::sparql_parser_v2::SparqlParserV2;
+    use std::collections::HashMap;
+    use std::sync::Arc;
+
+    fn metadata(table_name: &str, columns: &[&str], primary_keys: &[&str]) -> Arc<TableMetadata> {
+        Arc::new(TableMetadata {
+            table_name: table_name.to_string(),
+            columns: columns.iter().map(|s| s.to_string()).collect(),
+            primary_keys: primary_keys.iter().map(|s| s.to_string()).collect(),
+            foreign_keys: Vec::new(),
+            unique_constraints: Vec::new(),
+            check_constraints: Vec::new(),
+            not_null_columns: Vec::new(),
+        })
+    }
+
+    fn contains_constant_binding(node: &LogicNode, var_name: &str, expected: &str) -> bool {
+        match node {
+            LogicNode::Construction { bindings, child, .. } => {
+                if matches!(bindings.get(var_name), Some(Expr::Term(Term::Constant(value))) if value == expected) {
+                    return true;
+                }
+                contains_constant_binding(child, var_name, expected)
+            }
+            LogicNode::Filter { child, .. }
+            | LogicNode::Limit { child, .. }
+            | LogicNode::SubQuery { inner: child, .. }
+            | LogicNode::Aggregation { child, .. } => contains_constant_binding(child, var_name, expected),
+            LogicNode::Join { children, .. } | LogicNode::Union(children) => {
+                children.iter().any(|child| contains_constant_binding(child, var_name, expected))
+            }
+            _ => false,
+        }
+    }
+
+    fn contains_union(node: &LogicNode) -> bool {
+        match node {
+            LogicNode::Union(_) => true,
+            LogicNode::Construction { child, .. }
+            | LogicNode::Filter { child, .. }
+            | LogicNode::Limit { child, .. }
+            | LogicNode::SubQuery { inner: child, .. }
+            | LogicNode::Aggregation { child, .. } => contains_union(child),
+            LogicNode::Join { children, .. } => children.iter().any(contains_union),
+            _ => false,
+        }
+    }
+
+    #[test]
+    fn expands_variable_predicate_into_union_branches() {
+        let mut metadata_map = HashMap::new();
+        metadata_map.insert(
+            "employees".to_string(),
+            metadata("employees", &["employee_id", "email"], &["employee_id"]),
+        );
+
+        let mut store = MappingStore::new();
+        store.insert_mapping(MappingRule {
+            predicate: "http://example.org/email".to_string(),
+            table_name: "employees".to_string(),
+            subject_template: Some("http://example.org/employee/{employee_id}".to_string()),
+            object_constant: None,
+            position_to_column: HashMap::from([(1usize, "email".to_string())]),
+        });
+        store.insert_mapping(MappingRule {
+            predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
+            table_name: "employees".to_string(),
+            subject_template: Some("http://example.org/employee/{employee_id}".to_string()),
+            object_constant: Some("http://example.org/Employee".to_string()),
+            position_to_column: HashMap::new(),
+        });
+
+        let parsed = SparqlParserV2::default()
+            .parse("SELECT DISTINCT ?p WHERE { ?s ?p ?o . FILTER(isIRI(?p)) }")
+            .expect("query parses");
+        let plan = IRConverter::convert_with_mappings(&parsed, &metadata_map, Some(&store));
+
+        assert!(contains_union(&plan));
+        assert!(contains_constant_binding(&plan, "p", "http://example.org/email"));
+        assert!(contains_constant_binding(&plan, "p", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"));
+    }
+
+    #[test]
+    fn expands_variable_rdf_type_object_into_constant_class_bindings() {
+        let mut metadata_map = HashMap::new();
+        metadata_map.insert(
+            "employees".to_string(),
+            metadata("employees", &["employee_id"], &["employee_id"]),
+        );
+
+        let mut store = MappingStore::new();
+        store.insert_mapping(MappingRule {
+            predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
+            table_name: "employees".to_string(),
+            subject_template: Some("http://example.org/employee/{employee_id}".to_string()),
+            object_constant: Some("http://example.org/Employee".to_string()),
+            position_to_column: HashMap::new(),
+        });
+        store.insert_mapping(MappingRule {
+            predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".to_string(),
+            table_name: "employees".to_string(),
+            subject_template: Some("http://example.org/employee/{employee_id}".to_string()),
+            object_constant: Some("http://example.org/Manager".to_string()),
+            position_to_column: HashMap::new(),
+        });
+
+        let parsed = SparqlParserV2::default()
+            .parse("SELECT DISTINCT ?class WHERE { ?s a ?class . FILTER(isIRI(?class)) }")
+            .expect("query parses");
+        let plan = IRConverter::convert_with_mappings(&parsed, &metadata_map, Some(&store));
+
+        assert!(contains_union(&plan));
+        assert!(contains_constant_binding(&plan, "class", "http://example.org/Employee"));
+        assert!(contains_constant_binding(&plan, "class", "http://example.org/Manager"));
+    }
 }

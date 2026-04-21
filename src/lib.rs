@@ -696,9 +696,23 @@ pub(crate) fn spi_execute_sparql_json_rows(
     if upper_sparql.trim_start().starts_with("ASK") {
         // For ASK queries, wrap with EXISTS to get boolean
         let ask_sql = format!("SELECT EXISTS({}) AS result", sql);
-        let table = client
-            .select(&ask_sql, None, None)
-            .map_err(|e| format!("SQL execution failed: {}; debug={:?}", e, e))?;
+        let table = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            client.select(&ask_sql, None, None)
+        })) {
+            Ok(Ok(table)) => table,
+            Ok(Err(e)) => {
+                return Err(format!("SQL execution failed: {}; debug={:?}", e, e));
+            }
+            Err(panic_info) => {
+                let msg = panic_payload_to_string(panic_info);
+                log!(
+                    "rs-ontop-core: [SQL_EXECUTION_PANIC]\nphase=ask\nreason={}\n[SQL_BEGIN]\n{}\n[SQL_END]",
+                    msg,
+                    ask_sql
+                );
+                return Err(format!("SQL execution panic: {}", msg));
+            }
+        };
         
         if let Some(row) = table.into_iter().next() {
             match row.get::<bool>(1) {
@@ -720,9 +734,23 @@ pub(crate) fn spi_execute_sparql_json_rows(
 
     let wrapped_sql = format!("SELECT to_jsonb(t) FROM ({}) AS t", sql);
     let mut results = Vec::new();
-    let table = client
-        .select(&wrapped_sql, None, None)
-        .map_err(|e| format!("SQL execution failed: {}; debug={:?}", e, e))?;
+    let table = match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        client.select(&wrapped_sql, None, None)
+    })) {
+        Ok(Ok(table)) => table,
+        Ok(Err(e)) => {
+            return Err(format!("SQL execution failed: {}; debug={:?}", e, e));
+        }
+        Err(panic_info) => {
+            let msg = panic_payload_to_string(panic_info);
+            log!(
+                "rs-ontop-core: [SQL_EXECUTION_PANIC]\nphase=rows\nreason={}\n[SQL_BEGIN]\n{}\n[SQL_END]",
+                msg,
+                wrapped_sql
+            );
+            return Err(format!("SQL execution panic: {}", msg));
+        }
+    };
 
     for row in table {
         match row.get::<pgrx::JsonB>(1) {
@@ -732,6 +760,16 @@ pub(crate) fn spi_execute_sparql_json_rows(
         }
     }
     Ok(results)
+}
+
+pub(crate) fn panic_payload_to_string(panic_info: Box<dyn std::any::Any + Send>) -> String {
+    if let Some(s) = panic_info.downcast_ref::<&str>() {
+        (*s).to_string()
+    } else if let Some(s) = panic_info.downcast_ref::<String>() {
+        s.clone()
+    } else {
+        "unknown panic".to_string()
+    }
 }
 
 #[pg_extern]

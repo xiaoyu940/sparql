@@ -999,23 +999,23 @@ impl FlatSQLGenerator {
             let mut branch_generator = self.child_generator();
             let branch_sql = branch_generator.generate(child)?;
 
-            let mut branch_aliases: Vec<String> = branch_generator
-                .ctx
-                .select_items
-                .iter()
-                .map(|i| i.alias.clone())
-                .collect();
-            branch_aliases.sort();
-            branch_aliases.dedup();
+            let mut branch_alias_map: HashMap<String, String> = HashMap::new();
+            for item in &branch_generator.ctx.select_items {
+                let raw_alias = item.alias.clone();
+                branch_alias_map.entry(raw_alias.clone()).or_insert(raw_alias.clone());
+                branch_alias_map
+                    .entry(format!("col_{}", to_snake_case(raw_alias.trim_start_matches('?'))))
+                    .or_insert(raw_alias);
+            }
 
             let branch_alias = format!("u{}", idx);
             let normalized_items: Vec<String> = union_aliases
                 .iter()
                 .map(|alias| {
-                    if branch_aliases.iter().any(|a| a == alias) {
-                        format!("{}.{} AS {}", branch_alias, alias, alias)
+                    if let Some(source_alias) = branch_alias_map.get(alias) {
+                        format!("CAST({}.{} AS TEXT) AS {}", branch_alias, source_alias, alias)
                     } else {
-                        format!("NULL AS {}", alias)
+                        format!("NULL::TEXT AS {}", alias)
                     }
                 })
                 .collect();
@@ -1322,6 +1322,10 @@ fn add_join_condition(
                     
                     // 3. SPARQL 内置函数
                     "STR" if args_sql.len() == 1 => Ok(format!("CAST({} AS TEXT)", args_sql[0])),
+                    "ISIRI" | "ISURI" if args_sql.len() == 1 => Ok(format!(
+                        "({0} IS NOT NULL AND CAST({0} AS TEXT) ~ '^[A-Za-z][A-Za-z0-9+.-]*:[^[:space:]]*$')",
+                        args_sql[0]
+                    )),
                     "LCASE" | "LOWER" if args_sql.len() == 1 => Ok(format!("LOWER({})", args_sql[0])),
                     "UCASE" | "UPPER" if args_sql.len() == 1 => Ok(format!("UPPER({})", args_sql[0])),
                     "IF" if args_sql.len() == 3 => Ok(format!(

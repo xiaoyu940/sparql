@@ -15,7 +15,6 @@ use crate::ENGINE;
 
 pub mod database;
 pub mod http;
-pub mod robust;
 
 #[pg_guard]
 #[no_mangle]
@@ -632,32 +631,47 @@ fn execute_raw_sql_query(sql_query: &str) -> Result<serde_json::Value, String> {
         let wrapped_sql = format!("SELECT to_jsonb(t) FROM ({}) AS t", normalized);
         let mut inner: Option<Result<Vec<serde_json::Value>, String>> = None;
 
-        if let Err(e) = Spi::connect(|client| {
-            inner = Some(match client.select(&wrapped_sql, None, None) {
-                Ok(table) => {
-                    let mut rows = Vec::new();
-                    let mut decode_err: Option<String> = None;
-                    for row in table {
-                        match row.get::<pgrx::JsonB>(1) {
-                            Ok(Some(payload)) => rows.push(payload.0),
-                            Ok(None) => rows.push(serde_json::Value::Null),
-                            Err(err) => {
-                                decode_err = Some(format!("SQL row decode failed: {}", err));
-                                break;
+        let spi_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            Spi::connect(|client| {
+                inner = Some(match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    client.select(&wrapped_sql, None, None)
+                })) {
+                    Ok(Ok(table)) => {
+                        let mut rows = Vec::new();
+                        let mut decode_err: Option<String> = None;
+                        for row in table {
+                            match row.get::<pgrx::JsonB>(1) {
+                                Ok(Some(payload)) => rows.push(payload.0),
+                                Ok(None) => rows.push(serde_json::Value::Null),
+                                Err(err) => {
+                                    decode_err = Some(format!("SQL row decode failed: {}", err));
+                                    break;
+                                }
                             }
                         }
+                        if let Some(err) = decode_err {
+                            Err(err)
+                        } else {
+                            Ok(rows)
+                        }
                     }
-                    if let Some(err) = decode_err {
-                        Err(err)
-                    } else {
-                        Ok(rows)
+                    Ok(Err(err)) => Err(format!("SQL query failed: {}", err)),
+                    Err(panic_info) => {
+                        let msg = crate::panic_payload_to_string(panic_info);
+                        log!("rs-ontop-core: [SQL_REQUEST_PANIC] reason={} [SQL_BEGIN] {} [SQL_END]", msg, wrapped_sql);
+                        Err(format!("SQL query panic: {}", msg))
                     }
-                }
-                Err(err) => Err(format!("SQL query failed: {}", err)),
-            });
-            Ok::<(), pgrx::spi::SpiError>(())
-        }) {
-            return Err(format!("SPI connect failed: {}", e));
+                });
+                Ok::<(), pgrx::spi::SpiError>(())
+            })
+        }));
+        match spi_result {
+            Ok(Ok(())) => {}
+            Ok(Err(e)) => return Err(format!("SPI connect failed: {}", e)),
+            Err(panic_info) => {
+                let msg = crate::panic_payload_to_string(panic_info);
+                return Err(format!("SPI execution panic: {}", msg));
+            }
         }
 
         let rows = inner.unwrap_or_else(|| Err("SQL query produced no result".to_string()))?;
@@ -681,14 +695,22 @@ fn execute_ontop_query(sparql_query: &str) -> Result<Vec<serde_json::Value>, Str
     // Single SPI frame: do not invoke SQL `ontop_query()` from inside `Spi::connect`
     // (that would nest SPI and SIGSEGV the backend when the inner frame calls SPI_finish).
     let mut inner: Option<Result<Vec<serde_json::Value>, String>> = None;
-    if let Err(e) = Spi::connect(|mut client| {
-        inner = Some(crate::spi_execute_sparql_json_rows(
-            &mut client,
-            sparql_query,
-        ));
-        Ok::<(), pgrx::spi::SpiError>(())
-    }) {
-        return Err(format!("SPI connect failed: {}", e));
+    let spi_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        Spi::connect(|mut client| {
+            inner = Some(crate::spi_execute_sparql_json_rows(
+                &mut client,
+                sparql_query,
+            ));
+            Ok::<(), pgrx::spi::SpiError>(())
+        })
+    }));
+    match spi_result {
+        Ok(Ok(())) => {}
+        Ok(Err(e)) => return Err(format!("SPI connect failed: {}", e)),
+        Err(panic_info) => {
+            let msg = crate::panic_payload_to_string(panic_info);
+            return Err(format!("SPI execution panic: {}", msg));
+        }
     }
     inner.unwrap_or_else(|| Err("ontop query produced no result".to_string()))
 }
