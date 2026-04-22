@@ -11,11 +11,13 @@ use serde_json;
 
 pub mod benchmark;
 pub mod codegen;
+pub mod database;
 pub mod config;
 pub mod error;
 pub mod federation;
 pub mod function;
 pub mod ir;
+pub mod http;
 pub mod listener;
 pub mod mapping;
 pub mod metadata;

@@ -1,7 +1,7 @@
 //! Sprint1 delivery shim: portal manager facade.
 
 use crate::error::OntopError;
-use crate::listener::database::streaming_client::QueryPortal;
+use crate::database::streaming_client::QueryPortal;
 
 #[derive(Debug, Default)]
 pub struct PortalManager;

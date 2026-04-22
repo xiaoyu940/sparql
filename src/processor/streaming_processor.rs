@@ -1,5 +1,5 @@
 use crate::error::OntopError;
-use crate::listener::database::streaming_client::StreamingResultSet;
+use crate::database::streaming_client::StreamingResultSet;
 
 #[derive(Debug, Default)]
 pub struct StreamingProcessor;

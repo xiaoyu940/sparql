@@ -1,4 +1,4 @@
-﻿use pgrx::bgworkers::*;
+use pgrx::bgworkers::*;
 use pgrx::prelude::*;
 use regex::Regex;
 use spargebra::Query;
@@ -13,8 +13,8 @@ use crate::parser::SparqlParserV2;
 use crate::sql::flat_generator::FlatSQLGenerator;
 use crate::ENGINE;
 
-pub mod database;
-pub mod http;
+pub(crate) mod database;
+pub(crate) mod http;
 
 #[pg_guard]
 #[no_mangle]
@@ -724,7 +724,7 @@ fn build_logic_plan(sparql_query: &str) -> Result<LogicNode, String> {
         .parse(sparql_query)
         .map_err(|e| format!("SPARQL parse failed: {}", e))?;
 
-    // 浠庡叏灞€ENGINE鑾峰彇鍏冩暟鎹拰鏄犲皠
+    // 从全局ENGINE获取元数据和映射
     let guard = ENGINE
         .lock()
         .map_err(|e| format!("Engine lock failed: {}", e))?;
@@ -733,7 +733,7 @@ fn build_logic_plan(sparql_query: &str) -> Result<LogicNode, String> {
         "Engine not initialized. Run SELECT ontop_start_sparql_server();".to_string()
     })?;
 
-    // 浣跨敤寮曟搸涓殑鍏冩暟鎹拰鏄犲皠
+    // 使用引擎中的元数据和映射
     let builder = IRBuilder::new();
     builder
         .build_with_mappings(

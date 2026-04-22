@@ -1,7 +1,7 @@
 use tiny_http::{Header, Request, Response, StatusCode};
 
 use crate::error::OntopError;
-use crate::listener::database::streaming_client::{StreamingResultSet, StreamingRow};
+use crate::database::streaming_client::{StreamingResultSet, StreamingRow};
 
 /// Buffered streaming response helper.
 ///
